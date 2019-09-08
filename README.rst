@@ -1,14 +1,13 @@
 Steam Acolyte
 =============
 
-Lightweight account switcher/login keeper for steam.
+Lightweight user account switcher/login keeper for steam.
 
 This tool provides a simple UI to switch between different steam user accounts
-without having to reenter your password/2FA. This works by copying the login
-cookie (depot) for the last user to a temporary location and restoring this
-config to the appropriate location when the particular user is selected from
-the UI. There is no magic here, and we do not store any credentials
-independently from steam!
+without having to reenter your password/2FA. This works by copying the
+credentials depot which contains a login token for the last active user to a
+temporary location. This config is restored to the appropriate location when
+the particular user is selected from the UI.
 
 This dictates a usage as follows:
 
@@ -23,3 +22,8 @@ This dictates a usage as follows:
 - the user selection dialog will popup again
 - choose user
 - ...
+
+There is no magic interaction with steam here, and we do not store any
+credentials independently from steam!
+
+Note that only linux is supported currently. Windows support is planned.
