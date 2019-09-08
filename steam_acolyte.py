@@ -53,9 +53,8 @@ def main(args):
 def run_gui(root):
     from PyQt5.QtWidgets import QApplication
     import signal
-    import traceback
     app = QApplication([])
-    sys.excepthook = traceback.print_exception
+    sys.excepthook = except_handler
     # Setup handling of KeyboardInterrupt (Ctrl-C) for PyQt:
     # By default Ctrl-C has no effect in PyQt. For more information, see:
     # https://riverbankcomputing.com/pipermail/pyqt/2008-May/019242.html
@@ -160,6 +159,13 @@ def read_file(filename):
     """Read full contents of given file."""
     with open(filename) as f:
         return f.read()
+
+
+def except_handler():
+    from PyQt5.QtWidgets import QApplication
+    import traceback
+    traceback.print_exception()
+    QApplication.quit()
 
 
 def interrupt_handler(signum, frame):
