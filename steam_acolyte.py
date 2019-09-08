@@ -45,7 +45,7 @@ def main(args):
     elif opts['start']:
         switch_user(root, opts['<USER>'])
         run_steam()
-        store_login_cookie()
+        store_login_cookie(root)
     else:
         run_gui(root)
 
