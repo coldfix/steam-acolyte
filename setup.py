@@ -9,7 +9,7 @@ with open('steam_acolyte.py', 'rb') as f:
         pass                # and return dunder-globals anyway!
 
 setup(
-    name    = meta['__name__'],
+    name    = meta['__title__'],
     version = meta['__version__'],
     url     = meta['__url__'],
 )

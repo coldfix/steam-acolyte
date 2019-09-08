@@ -12,7 +12,7 @@ Options:
     -r ROOT, --root ROOT        Steam root path
 """
 
-__name__    = "steam-acolyte"
+__title__   = "steam-acolyte"
 __version__ = "0.0.1"
 __url__     = "https://github.com/coldfix/steam-acolyte"
 
