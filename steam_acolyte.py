@@ -73,10 +73,9 @@ def create_login_dialog(root):
     layout = QHBoxLayout()
     window.setLayout(layout)
     window.setWindowTitle("Steam Acolyte")
-    config = read_steam_config(root)
-    steam = config['InstallConfigStore']['Software']['Valve']['Steam']
-    accounts = steam['Accounts']
-    for username in accounts:
+    users = read_steam_config(root, 'loginusers.vdf')['users']
+    for userinfo in users.values():
+        username = userinfo['AccountName']
         button = QPushButton(username)
         button.clicked.connect(partial(
             user_button_clicked, window, root, username))
@@ -138,9 +137,9 @@ def run_steam(args=()):
     subprocess.call(['steam', *args])
 
 
-def read_steam_config(root):
+def read_steam_config(root, filename='config.vdf'):
     """Read steam config.vdf file."""
-    conf = os.path.join(root, 'config', 'config.vdf')
+    conf = os.path.join(root, 'config', filename)
     text = read_file(conf)
     return vdf.loads(text)
 
