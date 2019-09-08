@@ -12,6 +12,10 @@ Options:
     -r ROOT, --root ROOT        Steam root path
 """
 
+__name__    = "steam-acolyte"
+__version__ = "0.0.0"
+__url__     = "https://github.com/coldfix/steam-acolyte"
+
 import vdf
 from docopt import docopt
 
