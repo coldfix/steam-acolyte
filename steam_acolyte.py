@@ -95,8 +95,7 @@ def user_button_clicked(window, root, username):
 
 def store_login_cookie(root):
     username = get_last_user(root)
-    user_id = get_user_id(root, username)
-    userpath = os.path.join(root, 'acolyte', user_id, 'config.vdf')
+    userpath = os.path.join(root, 'acolyte', username, 'config.vdf')
     configpath = os.path.join(root, 'config', 'config.vdf')
     os.makedirs(os.path.dirname(userpath), exist_ok=True)
     copyfile(configpath, userpath)
@@ -106,21 +105,13 @@ def switch_user(root, username):
     """Switch login config to given user. Do not use this while steam is
     running."""
     set_last_user(root, username)
-    user_id = get_user_id(root, username)
-    userpath = os.path.join(root, 'acolyte', user_id, 'config.vdf')
+    userpath = os.path.join(root, 'acolyte', username, 'config.vdf')
     configpath = os.path.join(root, 'config', 'config.vdf')
     if not os.path.isfile(userpath):
         print(f"No stored config found for {username!r}", file=sys.stderr)
         return False
     copyfile(userpath, configpath)
     return True
-
-
-def get_user_id(root, username):
-    config = read_steam_config(root)
-    steam = config['InstallConfigStore']['Software']['Valve']['Steam']
-    accounts = steam['Accounts']
-    return accounts[username]['SteamID']
 
 
 def get_last_user(root):
