@@ -32,7 +32,7 @@ STEAM_ROOT_PATH = [
 ]
 
 
-def main(args):
+def main(args=None):
     opts = docopt(__doc__, args)
     root = opts['--root'] or find_steam_root()
     if root is None:
