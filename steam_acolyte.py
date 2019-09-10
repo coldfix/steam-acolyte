@@ -149,6 +149,9 @@ QLabel:hover {
         store_login_cookie(self.root)
         self.window().show()
 
+    def mousePressEvent(self, event):
+        self.login_clicked()
+
 
 def store_login_cookie(root):
     username = get_last_user(root)
