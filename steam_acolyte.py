@@ -77,7 +77,7 @@ def create_login_dialog(steam):
         account_name = userinfo['AccountName']
         layout.addWidget(
             UserWidget(window, steam, persona_name, account_name,
-                       f"UID: {steam_id}"))
+                       "UID: {}".format(steam_id)))
     layout.addWidget(
         UserWidget(window, steam, "(other)", ""))
     # steal window icon:
@@ -271,7 +271,8 @@ class Steam:
         userpath = os.path.join(self.root, 'acolyte', username, 'config.vdf')
         configpath = os.path.join(self.root, 'config', 'config.vdf')
         if not os.path.isfile(userpath):
-            print(f"No stored config found for {username!r}", file=sys.stderr)
+            print("No stored config found for {!r}".format(username),
+                  file=sys.stderr)
             return False
         copyfile(userpath, configpath)
         return True
