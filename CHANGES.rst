@@ -1,6 +1,13 @@
 CHANGES
 -------
 
+0.0.6
+~~~~~
+
+- support windows
+- allow installing on python>=3.5
+
+
 0.0.5
 ~~~~~
 
