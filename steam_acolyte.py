@@ -61,8 +61,8 @@ def run_gui(steam):
     # http://stackoverflow.com/questions/4938723/what-is-the-correct-way-to-make-my-pyqt-application-quit-when-killed-from-the-console
     signal.signal(signal.SIGINT, interrupt_handler)
     safe_timer(50, lambda: None)
-    window = create_login_dialog(steam)
-    window.show()
+    steam.login_window = create_login_dialog(steam)
+    steam.login_window.show()
     return app.exec_()
 
 
@@ -195,12 +195,17 @@ QToolButton:hover {
         """)
 
     def login_clicked(self):
-        self.window().hide()
+        steam = self.steam
+        steam.login_window.close()
+        steam.login_window = None
         self.steam.switch_user(self.user)
         self.steam.run()
         self.steam.store_login_cookie()
-        self.update_ui()
-        self.window().show()
+        # Close and recreate after steam is finished. This serves two purposes:
+        # 1. update user list and widget state
+        # 2. fix ":hover" selector not working on linux after hide+show
+        steam.login_window = create_login_dialog(steam)
+        steam.login_window.show()
 
     def logout_clicked(self):
         self.steam.remove_login_cookie(self.user)
