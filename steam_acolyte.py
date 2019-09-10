@@ -79,8 +79,10 @@ def create_login_dialog(root):
     for userinfo in users.values():
         persona_name = userinfo['PersonaName']
         account_name = userinfo['AccountName']
-        button = UserWidget(window, root, persona_name, account_name)
-        layout.addWidget(button)
+        layout.addWidget(
+            UserWidget(window, root, persona_name, account_name))
+    layout.addWidget(
+        UserWidget(window, root, "(other)", ""))
     return window
 
 
@@ -93,7 +95,7 @@ class UserWidget(QFrame):
         layout = QHBoxLayout()
         labels = QVBoxLayout()
         top_label = QLabel(persona_name)
-        bot_label = QLabel(account_name)
+        bot_label = QLabel(account_name or "New account")
         top_font = top_label.font()
         top_font.setBold(True)
         top_font.setPointSize(top_font.pointSize() + 2)
@@ -104,12 +106,13 @@ class UserWidget(QFrame):
         self.logout_action.setIcon(
             self.style().standardIcon(QStyle.SP_DialogCancelButton))
         self.logout_action.triggered.connect(self.logout_clicked)
-        self.logout_action.setEnabled(has_cookie(root, account_name))
         button = QToolButton()
         button.setDefaultAction(self.logout_action)
         layout.addLayout(labels)
         layout.addStretch()
         layout.addWidget(button)
+        button.setVisible(bool(account_name))
+        self.update_ui()
         self.setLayout(layout)
         self.setFrameShape(QFrame.Box)
         self.setFrameShadow(QFrame.Raised)
@@ -156,15 +159,18 @@ QToolButton {
         switch_user(self.root, self.user)
         run_steam()
         store_login_cookie(self.root)
-        self.logout_action.setEnabled(has_cookie(self.root, self.user))
+        self.update_ui()
         self.window().show()
 
     def logout_clicked(self):
         remove_login_cookie(self.root, self.user)
-        self.logout_action.setEnabled(has_cookie(self.root, self.user))
+        self.update_ui()
 
     def mousePressEvent(self, event):
         self.login_clicked()
+
+    def update_ui(self):
+        self.logout_action.setEnabled(has_cookie(self.root, self.user))
 
 
 def store_login_cookie(root):
@@ -183,13 +189,15 @@ def remove_login_cookie(root, username):
 
 def has_cookie(root, username):
     userpath = os.path.join(root, 'acolyte', username, 'config.vdf')
-    return os.path.isfile(userpath)
+    return bool(username) and os.path.isfile(userpath)
 
 
 def switch_user(root, username):
     """Switch login config to given user. Do not use this while steam is
     running."""
     set_last_user(root, username)
+    if not username:
+        return True
     userpath = os.path.join(root, 'acolyte', username, 'config.vdf')
     configpath = os.path.join(root, 'config', 'config.vdf')
     if not os.path.isfile(userpath):
