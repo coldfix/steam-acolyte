@@ -21,8 +21,8 @@ from docopt import docopt
 
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import (
-    QApplication, QDialog, QFrame, QLabel,
-    QHBoxLayout, QVBoxLayout, QPushButton)
+    QApplication, QDialog, QFrame, QLabel, QAction, QStyle,
+    QHBoxLayout, QVBoxLayout, QToolButton)
 
 import os
 import sys
@@ -100,8 +100,13 @@ class UserWidget(QFrame):
         top_label.setFont(top_font)
         labels.addWidget(top_label)
         labels.addWidget(bot_label)
-        button = QPushButton('Login')
-        button.clicked.connect(self.login_clicked)
+        self.logout_action = QAction()
+        self.logout_action.setIcon(
+            self.style().standardIcon(QStyle.SP_DialogCancelButton))
+        self.logout_action.triggered.connect(self.logout_clicked)
+        self.logout_action.setEnabled(has_cookie(root, account_name))
+        button = QToolButton()
+        button.setDefaultAction(self.logout_action)
         layout.addLayout(labels)
         layout.addStretch()
         layout.addWidget(button)
@@ -140,6 +145,10 @@ QLabel:hover {
     background: transparent;
     border: none;
 }
+
+QToolButton {
+    border: none;
+}
         """)
 
     def login_clicked(self):
@@ -147,7 +156,12 @@ QLabel:hover {
         switch_user(self.root, self.user)
         run_steam()
         store_login_cookie(self.root)
+        self.logout_action.setEnabled(has_cookie(self.root, self.user))
         self.window().show()
+
+    def logout_clicked(self):
+        remove_login_cookie(self.root, self.user)
+        self.logout_action.setEnabled(has_cookie(self.root, self.user))
 
     def mousePressEvent(self, event):
         self.login_clicked()
@@ -159,6 +173,17 @@ def store_login_cookie(root):
     configpath = os.path.join(root, 'config', 'config.vdf')
     os.makedirs(os.path.dirname(userpath), exist_ok=True)
     copyfile(configpath, userpath)
+
+
+def remove_login_cookie(root, username):
+    userpath = os.path.join(root, 'acolyte', username, 'config.vdf')
+    if os.path.isfile(userpath):
+        os.remove(userpath)
+
+
+def has_cookie(root, username):
+    userpath = os.path.join(root, 'acolyte', username, 'config.vdf')
+    return os.path.isfile(userpath)
 
 
 def switch_user(root, username):
