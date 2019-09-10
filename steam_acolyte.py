@@ -20,7 +20,9 @@ import vdf
 from docopt import docopt
 
 from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QApplication, QDialog, QHBoxLayout, QPushButton
+from PyQt5.QtWidgets import (
+    QApplication, QDialog, QWidget,
+    QHBoxLayout, QVBoxLayout, QPushButton)
 
 import os
 import sys
@@ -71,17 +73,26 @@ def run_gui(root):
 
 def create_login_dialog(root):
     window = QDialog()
-    layout = QHBoxLayout()
+    layout = QVBoxLayout()
     window.setLayout(layout)
     window.setWindowTitle("Steam Acolyte")
     users = read_steam_config(root, 'loginusers.vdf')['users']
     for userinfo in users.values():
         username = userinfo['AccountName']
-        button = QPushButton(username)
-        button.clicked.connect(partial(
-            user_button_clicked, window, root, username))
+        button = create_login_button(root, window, username)
         layout.addWidget(button)
     return window
+
+
+def create_login_button(root, window, username):
+    widget = QWidget()
+    layout = QHBoxLayout()
+    button = QPushButton(username)
+    button.clicked.connect(partial(
+        user_button_clicked, window, root, username))
+    layout.addWidget(button)
+    widget.setLayout(layout)
+    return widget
 
 
 def user_button_clicked(window, root, username):
