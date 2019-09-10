@@ -19,7 +19,7 @@ __url__     = "https://github.com/coldfix/steam-acolyte"
 import vdf
 from docopt import docopt
 
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer, QSize
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (
     QApplication, QDialog, QFrame, QLabel, QAction, QStyle,
@@ -99,6 +99,17 @@ class UserWidget(QFrame):
         self.user = account_name
         layout = QHBoxLayout()
         labels = QVBoxLayout()
+
+        ico_label = QLabel()
+        if account_name:
+            icon_path = os.path.join(
+                root, 'clientui', 'images', 'icons', 'nav_profile_idle.png')
+        else:
+            icon_path = os.path.join(
+                root, 'clientui', 'images', 'icons', 'nav_customize.png')
+        if os.path.isfile(icon_path):
+            ico_label.setPixmap(QIcon(icon_path).pixmap(QSize(128, 128)))
+
         top_label = QLabel(persona_name)
         bot_label = QLabel(account_name or "New account")
         top_font = top_label.font()
@@ -113,8 +124,11 @@ class UserWidget(QFrame):
         self.logout_action.triggered.connect(self.logout_clicked)
         button = QToolButton()
         button.setDefaultAction(self.logout_action)
+        layout.addWidget(ico_label)
+        layout.addSpacing(10)
         layout.addLayout(labels)
         layout.addStretch()
+        layout.addSpacing(10)
         layout.addWidget(button)
         button.setVisible(bool(account_name))
         self.update_ui()
