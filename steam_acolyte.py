@@ -21,7 +21,7 @@ from docopt import docopt
 
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import (
-    QApplication, QDialog, QWidget,
+    QApplication, QDialog, QFrame, QLabel,
     QHBoxLayout, QVBoxLayout, QPushButton)
 
 import os
@@ -78,20 +78,67 @@ def create_login_dialog(root):
     window.setWindowTitle("Steam Acolyte")
     users = read_steam_config(root, 'loginusers.vdf')['users']
     for userinfo in users.values():
-        username = userinfo['AccountName']
-        button = create_login_button(root, window, username)
+        persona_name = userinfo['PersonaName']
+        account_name = userinfo['AccountName']
+        button = create_login_button(root, window, persona_name, account_name)
         layout.addWidget(button)
     return window
 
 
-def create_login_button(root, window, username):
-    widget = QWidget()
+def create_login_button(root, window, persona_name, account_name):
+    widget = QFrame()
     layout = QHBoxLayout()
-    button = QPushButton(username)
+    labels = QVBoxLayout()
+    top_label = QLabel(persona_name)
+    bot_label = QLabel(account_name)
+    top_font = top_label.font()
+    top_font.setBold(True)
+    top_font.setPointSize(top_font.pointSize() + 2)
+    top_label.setFont(top_font)
+    labels.addWidget(top_label)
+    labels.addWidget(bot_label)
+    button = QPushButton('Login')
     button.clicked.connect(partial(
-        user_button_clicked, window, root, username))
+        user_button_clicked, window, root, account_name))
+    layout.addLayout(labels)
+    layout.addStretch()
     layout.addWidget(button)
     widget.setLayout(layout)
+    widget.setFrameShape(QFrame.Box)
+    widget.setFrameShadow(QFrame.Raised)
+    widget.setStyleSheet("""
+QFrame {
+    background: qlineargradient(
+        x1: 0, y1: 0,
+        x2: 0, y2: 1,
+        stop: 0 #FAFBFE,
+        stop: 1 #DCDEF1
+    );
+
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 10px;
+    border-color: #AAAAAA;
+}
+
+QFrame:hover {
+    background: qlineargradient(
+        x1: 0, y1: 0,
+        x2: 0, y2: 1,
+        stop: 0 #DADBDE,
+        stop: 1 #CCCEC1
+    );
+}
+
+QLabel {
+    background: transparent;
+    border: none;
+}
+QLabel:hover {
+    background: transparent;
+    border: none;
+}
+""")
     return widget
 
 
