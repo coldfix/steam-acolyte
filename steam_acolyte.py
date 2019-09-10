@@ -161,9 +161,9 @@ def read_file(filename):
         return f.read()
 
 
-def except_handler():
+def except_handler(*args, **kwargs):
     import traceback
-    traceback.print_exception()
+    traceback.print_exception(*args, **kwargs)
     QApplication.quit()
 
 
