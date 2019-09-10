@@ -229,6 +229,11 @@ QToolButton:hover {
 
         self.logout_action.setIcon(cross_icon)
 
+        if enabled:
+            self.logout_action.setToolTip("Delete saved login")
+        else:
+            self.logout_action.setToolTip("")
+
 def store_login_cookie(root):
     username = get_last_user(root)
     userpath = os.path.join(root, 'acolyte', username, 'config.vdf')
