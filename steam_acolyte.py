@@ -20,12 +20,13 @@ import vdf
 from docopt import docopt
 
 from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QApplication, QDialog, QHBoxLayout, QPushButton
+from PyQt5.QtWidgets import (
+    QApplication, QDialog, QFrame, QLabel, QAction, QStyle,
+    QHBoxLayout, QVBoxLayout, QToolButton)
 
 import os
 import sys
 from shutil import copyfile
-from functools import partial
 
 
 STEAM_ROOT_PATH = [
@@ -71,25 +72,105 @@ def run_gui(root):
 
 def create_login_dialog(root):
     window = QDialog()
-    layout = QHBoxLayout()
+    layout = QVBoxLayout()
     window.setLayout(layout)
     window.setWindowTitle("Steam Acolyte")
     users = read_steam_config(root, 'loginusers.vdf')['users']
     for userinfo in users.values():
-        username = userinfo['AccountName']
-        button = QPushButton(username)
-        button.clicked.connect(partial(
-            user_button_clicked, window, root, username))
-        layout.addWidget(button)
+        persona_name = userinfo['PersonaName']
+        account_name = userinfo['AccountName']
+        layout.addWidget(
+            UserWidget(window, root, persona_name, account_name))
+    layout.addWidget(
+        UserWidget(window, root, "(other)", ""))
     return window
 
 
-def user_button_clicked(window, root, username):
-    window.hide()
-    switch_user(root, username)
-    run_steam()
-    store_login_cookie(root)
-    window.show()
+class UserWidget(QFrame):
+
+    def __init__(self, parent, root, persona_name, account_name):
+        super().__init__(parent)
+        self.root = root
+        self.user = account_name
+        layout = QHBoxLayout()
+        labels = QVBoxLayout()
+        top_label = QLabel(persona_name)
+        bot_label = QLabel(account_name or "New account")
+        top_font = top_label.font()
+        top_font.setBold(True)
+        top_font.setPointSize(top_font.pointSize() + 2)
+        top_label.setFont(top_font)
+        labels.addWidget(top_label)
+        labels.addWidget(bot_label)
+        self.logout_action = QAction()
+        self.logout_action.setIcon(
+            self.style().standardIcon(QStyle.SP_DialogCancelButton))
+        self.logout_action.triggered.connect(self.logout_clicked)
+        button = QToolButton()
+        button.setDefaultAction(self.logout_action)
+        layout.addLayout(labels)
+        layout.addStretch()
+        layout.addWidget(button)
+        button.setVisible(bool(account_name))
+        self.update_ui()
+        self.setLayout(layout)
+        self.setFrameShape(QFrame.Box)
+        self.setFrameShadow(QFrame.Raised)
+        self.setStyleSheet("""
+QFrame {
+    background: qlineargradient(
+        x1: 0, y1: 0,
+        x2: 0, y2: 1,
+        stop: 0 #FAFBFE,
+        stop: 1 #DCDEF1
+    );
+
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 10px;
+    border-color: #AAAAAA;
+}
+
+QFrame:hover {
+    background: qlineargradient(
+        x1: 0, y1: 0,
+        x2: 0, y2: 1,
+        stop: 0 #DADBDE,
+        stop: 1 #CCCEC1
+    );
+}
+
+QLabel {
+    background: transparent;
+    border: none;
+}
+QLabel:hover {
+    background: transparent;
+    border: none;
+}
+
+QToolButton {
+    border: none;
+}
+        """)
+
+    def login_clicked(self):
+        self.window().hide()
+        switch_user(self.root, self.user)
+        run_steam()
+        store_login_cookie(self.root)
+        self.update_ui()
+        self.window().show()
+
+    def logout_clicked(self):
+        remove_login_cookie(self.root, self.user)
+        self.update_ui()
+
+    def mousePressEvent(self, event):
+        self.login_clicked()
+
+    def update_ui(self):
+        self.logout_action.setEnabled(has_cookie(self.root, self.user))
 
 
 def store_login_cookie(root):
@@ -100,10 +181,23 @@ def store_login_cookie(root):
     copyfile(configpath, userpath)
 
 
+def remove_login_cookie(root, username):
+    userpath = os.path.join(root, 'acolyte', username, 'config.vdf')
+    if os.path.isfile(userpath):
+        os.remove(userpath)
+
+
+def has_cookie(root, username):
+    userpath = os.path.join(root, 'acolyte', username, 'config.vdf')
+    return bool(username) and os.path.isfile(userpath)
+
+
 def switch_user(root, username):
     """Switch login config to given user. Do not use this while steam is
     running."""
     set_last_user(root, username)
+    if not username:
+        return True
     userpath = os.path.join(root, 'acolyte', username, 'config.vdf')
     configpath = os.path.join(root, 'config', 'config.vdf')
     if not os.path.isfile(userpath):
