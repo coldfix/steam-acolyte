@@ -19,7 +19,8 @@ __url__     = "https://github.com/coldfix/steam-acolyte"
 import vdf
 from docopt import docopt
 
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer, QSize
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (
     QApplication, QDialog, QFrame, QLabel, QAction, QStyle,
     QHBoxLayout, QVBoxLayout, QToolButton)
@@ -83,6 +84,21 @@ def create_login_dialog(root):
             UserWidget(window, root, persona_name, account_name))
     layout.addWidget(
         UserWidget(window, root, "(other)", ""))
+    # steal window icon:
+    steam_icon_path = os.path.join(root, 'public', 'steam_tray.ico')
+    if os.path.isfile(steam_icon_path):
+        window.setWindowIcon(QIcon(steam_icon_path))
+    window.setStyleSheet("""
+QDialog {
+    background: qlineargradient(
+        x1: 0, y1: 0,
+        x2: 0, y2: 1,
+        stop: 0 #1B2137,
+        stop: 1 #2A2E33
+    );
+    color: #DDDDDD;
+}
+    """)
     return window
 
 
@@ -94,8 +110,21 @@ class UserWidget(QFrame):
         self.user = account_name
         layout = QHBoxLayout()
         labels = QVBoxLayout()
+
+        ico_label = QLabel()
+        if account_name:
+            icon_path = os.path.join(
+                root, 'clientui', 'images', 'icons', 'nav_profile_idle.png')
+        else:
+            icon_path = os.path.join(
+                root, 'clientui', 'images', 'icons', 'nav_customize.png')
+        if os.path.isfile(icon_path):
+            ico_label.setPixmap(QIcon(icon_path).pixmap(QSize(128, 128)))
+
         top_label = QLabel(persona_name)
         bot_label = QLabel(account_name or "New account")
+        top_label.setObjectName("PersonaName")
+        bot_label.setObjectName("AccountName")
         top_font = top_label.font()
         top_font.setBold(True)
         top_font.setPointSize(top_font.pointSize() + 2)
@@ -103,13 +132,14 @@ class UserWidget(QFrame):
         labels.addWidget(top_label)
         labels.addWidget(bot_label)
         self.logout_action = QAction()
-        self.logout_action.setIcon(
-            self.style().standardIcon(QStyle.SP_DialogCancelButton))
         self.logout_action.triggered.connect(self.logout_clicked)
         button = QToolButton()
         button.setDefaultAction(self.logout_action)
+        layout.addWidget(ico_label)
+        layout.addSpacing(10)
         layout.addLayout(labels)
         layout.addStretch()
+        layout.addSpacing(10)
         layout.addWidget(button)
         button.setVisible(bool(account_name))
         self.update_ui()
@@ -121,23 +151,28 @@ QFrame {
     background: qlineargradient(
         x1: 0, y1: 0,
         x2: 0, y2: 1,
-        stop: 0 #FAFBFE,
-        stop: 1 #DCDEF1
+        stop: 1 #383E46,
+        stop: 0 #4A4E53
     );
 
     border-style: solid;
     border-width: 1px;
     border-radius: 10px;
     border-color: #AAAAAA;
+    color: #DDDDDD;
 }
 
 QFrame:hover {
     background: qlineargradient(
         x1: 0, y1: 0,
         x2: 0, y2: 1,
-        stop: 0 #DADBDE,
-        stop: 1 #CCCEC1
+        stop: 0 #585E66,
+        stop: 1 #6A6E73
     );
+}
+
+QLabel#PersonaName {
+    color: white;
 }
 
 QLabel {
@@ -151,6 +186,14 @@ QLabel:hover {
 
 QToolButton {
     border: none;
+    padding: 3px;
+}
+QToolButton:hover {
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 5px;
+    border-color: #5A5E63;
+    background: #565460;
 }
         """)
 
@@ -170,8 +213,21 @@ QToolButton {
         self.login_clicked()
 
     def update_ui(self):
-        self.logout_action.setEnabled(has_cookie(self.root, self.user))
+        enabled = has_cookie(self.root, self.user)
+        self.logout_action.setEnabled(enabled)
 
+        if enabled:
+            cross_icon_path = os.path.join(
+                self.root, 'clientui', 'images', 'icons', 'stop_loading.png')
+        else:
+            cross_icon_path = os.path.join(
+                self.root, 'clientui', 'images', 'icons', 'track_play.png')
+        if os.path.isfile(cross_icon_path):
+            cross_icon = QIcon(cross_icon_path)
+        else:
+            cross_icon = self.style().standardIcon(QStyle.SP_DialogCancelButton)
+
+        self.logout_action.setIcon(cross_icon)
 
 def store_login_cookie(root):
     username = get_last_user(root)
