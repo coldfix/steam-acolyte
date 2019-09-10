@@ -27,7 +27,6 @@ from PyQt5.QtWidgets import (
 import os
 import sys
 from shutil import copyfile
-from functools import partial
 
 
 STEAM_ROOT_PATH = [
@@ -80,33 +79,36 @@ def create_login_dialog(root):
     for userinfo in users.values():
         persona_name = userinfo['PersonaName']
         account_name = userinfo['AccountName']
-        button = create_login_button(root, window, persona_name, account_name)
+        button = UserWidget(window, root, persona_name, account_name)
         layout.addWidget(button)
     return window
 
 
-def create_login_button(root, window, persona_name, account_name):
-    widget = QFrame()
-    layout = QHBoxLayout()
-    labels = QVBoxLayout()
-    top_label = QLabel(persona_name)
-    bot_label = QLabel(account_name)
-    top_font = top_label.font()
-    top_font.setBold(True)
-    top_font.setPointSize(top_font.pointSize() + 2)
-    top_label.setFont(top_font)
-    labels.addWidget(top_label)
-    labels.addWidget(bot_label)
-    button = QPushButton('Login')
-    button.clicked.connect(partial(
-        user_button_clicked, window, root, account_name))
-    layout.addLayout(labels)
-    layout.addStretch()
-    layout.addWidget(button)
-    widget.setLayout(layout)
-    widget.setFrameShape(QFrame.Box)
-    widget.setFrameShadow(QFrame.Raised)
-    widget.setStyleSheet("""
+class UserWidget(QFrame):
+
+    def __init__(self, parent, root, persona_name, account_name):
+        super().__init__(parent)
+        self.root = root
+        self.user = account_name
+        layout = QHBoxLayout()
+        labels = QVBoxLayout()
+        top_label = QLabel(persona_name)
+        bot_label = QLabel(account_name)
+        top_font = top_label.font()
+        top_font.setBold(True)
+        top_font.setPointSize(top_font.pointSize() + 2)
+        top_label.setFont(top_font)
+        labels.addWidget(top_label)
+        labels.addWidget(bot_label)
+        button = QPushButton('Login')
+        button.clicked.connect(self.login_clicked)
+        layout.addLayout(labels)
+        layout.addStretch()
+        layout.addWidget(button)
+        self.setLayout(layout)
+        self.setFrameShape(QFrame.Box)
+        self.setFrameShadow(QFrame.Raised)
+        self.setStyleSheet("""
 QFrame {
     background: qlineargradient(
         x1: 0, y1: 0,
@@ -138,16 +140,14 @@ QLabel:hover {
     background: transparent;
     border: none;
 }
-""")
-    return widget
+        """)
 
-
-def user_button_clicked(window, root, username):
-    window.hide()
-    switch_user(root, username)
-    run_steam()
-    store_login_cookie(root)
-    window.show()
+    def login_clicked(self):
+        self.window().hide()
+        switch_user(self.root, self.user)
+        run_steam()
+        store_login_cookie(self.root)
+        self.window().show()
 
 
 def store_login_cookie(root):
