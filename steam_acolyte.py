@@ -121,8 +121,6 @@ class UserWidget(QFrame):
         if os.path.isfile(icon_path):
             ico_label.setPixmap(QIcon(icon_path).pixmap(QSize(128, 128)))
 
-        cross_icon = self.style().standardIcon(QStyle.SP_DialogCancelButton)
-
         top_label = QLabel(persona_name)
         bot_label = QLabel(account_name or "New account")
         top_label.setObjectName("PersonaName")
@@ -134,7 +132,6 @@ class UserWidget(QFrame):
         labels.addWidget(top_label)
         labels.addWidget(bot_label)
         self.logout_action = QAction()
-        self.logout_action.setIcon(cross_icon)
         self.logout_action.triggered.connect(self.logout_clicked)
         button = QToolButton()
         button.setDefaultAction(self.logout_action)
@@ -216,8 +213,21 @@ QToolButton:hover {
         self.login_clicked()
 
     def update_ui(self):
-        self.logout_action.setEnabled(has_cookie(self.root, self.user))
+        enabled = has_cookie(self.root, self.user)
+        self.logout_action.setEnabled(enabled)
 
+        if enabled:
+            cross_icon_path = os.path.join(
+                self.root, 'clientui', 'images', 'icons', 'stop_loading.png')
+        else:
+            cross_icon_path = os.path.join(
+                self.root, 'clientui', 'images', 'icons', 'track_play.png')
+        if os.path.isfile(cross_icon_path):
+            cross_icon = QIcon(cross_icon_path)
+        else:
+            cross_icon = self.style().standardIcon(QStyle.SP_DialogCancelButton)
+
+        self.logout_action.setIcon(cross_icon)
 
 def store_login_cookie(root):
     username = get_last_user(root)
