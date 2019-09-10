@@ -30,32 +30,27 @@ import sys
 from shutil import copyfile
 
 
-STEAM_ROOT_PATH = [
-    '~/.local/share/Steam',
-    '~/.steam/root',
-    '~/.steam',
-]
-
-
 def main(args=None):
     opts = docopt(__doc__, args)
-    root = opts['--root'] or find_steam_root()
-    if root is None:
-        print("""Unable to find steam user path!""", file=sys.stderr)
+    try:
+        steam = Steam(opts['--root'])
+    except RuntimeError as e:
+        print(e, file=sys.stderr)
         return 1
+
     if opts['store']:
-        store_login_cookie(root)
+        steam.store_login_cookie()
     elif opts['switch']:
-        switch_user(root, opts['<USER>'])
+        steam.switch_user(opts['<USER>'])
     elif opts['start']:
-        switch_user(root, opts['<USER>'])
-        run_steam()
-        store_login_cookie(root)
+        steam.switch_user(opts['<USER>'])
+        steam.run()
+        steam.store_login_cookie()
     else:
-        run_gui(root)
+        run_gui(steam)
 
 
-def run_gui(root):
+def run_gui(steam):
     import signal
     app = QApplication([])
     sys.excepthook = except_handler
@@ -66,26 +61,26 @@ def run_gui(root):
     # http://stackoverflow.com/questions/4938723/what-is-the-correct-way-to-make-my-pyqt-application-quit-when-killed-from-the-console
     signal.signal(signal.SIGINT, interrupt_handler)
     safe_timer(50, lambda: None)
-    window = create_login_dialog(root)
+    window = create_login_dialog(steam)
     window.show()
     return app.exec_()
 
 
-def create_login_dialog(root):
+def create_login_dialog(steam):
     window = QDialog()
     layout = QVBoxLayout()
     window.setLayout(layout)
     window.setWindowTitle("Steam Acolyte")
-    users = read_steam_config(root, 'loginusers.vdf')['users']
+    users = steam.read_config('loginusers.vdf')['users']
     for userinfo in users.values():
         persona_name = userinfo['PersonaName']
         account_name = userinfo['AccountName']
         layout.addWidget(
-            UserWidget(window, root, persona_name, account_name))
+            UserWidget(window, steam, persona_name, account_name))
     layout.addWidget(
-        UserWidget(window, root, "(other)", ""))
+        UserWidget(window, steam, "(other)", ""))
     # steal window icon:
-    steam_icon_path = os.path.join(root, 'public', 'steam_tray.ico')
+    steam_icon_path = os.path.join(steam.root, 'public', 'steam_tray.ico')
     if os.path.isfile(steam_icon_path):
         window.setWindowIcon(QIcon(steam_icon_path))
     window.setStyleSheet("""
@@ -104,9 +99,9 @@ QDialog {
 
 class UserWidget(QFrame):
 
-    def __init__(self, parent, root, persona_name, account_name):
+    def __init__(self, parent, steam, persona_name, account_name):
         super().__init__(parent)
-        self.root = root
+        self.steam = steam
         self.user = account_name
         layout = QHBoxLayout()
         labels = QVBoxLayout()
@@ -114,10 +109,10 @@ class UserWidget(QFrame):
         ico_label = QLabel()
         if account_name:
             icon_path = os.path.join(
-                root, 'clientui', 'images', 'icons', 'nav_profile_idle.png')
+                steam.root, 'clientui', 'images', 'icons', 'nav_profile_idle.png')
         else:
             icon_path = os.path.join(
-                root, 'clientui', 'images', 'icons', 'nav_customize.png')
+                steam.root, 'clientui', 'images', 'icons', 'nav_customize.png')
         if os.path.isfile(icon_path):
             ico_label.setPixmap(QIcon(icon_path).pixmap(QSize(128, 128)))
 
@@ -199,29 +194,29 @@ QToolButton:hover {
 
     def login_clicked(self):
         self.window().hide()
-        switch_user(self.root, self.user)
-        run_steam()
-        store_login_cookie(self.root)
+        self.steam.switch_user(self.user)
+        self.steam.run()
+        self.steam.store_login_cookie()
         self.update_ui()
         self.window().show()
 
     def logout_clicked(self):
-        remove_login_cookie(self.root, self.user)
+        self.steam.remove_login_cookie(self.user)
         self.update_ui()
 
     def mousePressEvent(self, event):
         self.login_clicked()
 
     def update_ui(self):
-        enabled = has_cookie(self.root, self.user)
+        enabled = self.steam.has_cookie(self.user)
         self.logout_action.setEnabled(enabled)
 
         if enabled:
             cross_icon_path = os.path.join(
-                self.root, 'clientui', 'images', 'icons', 'stop_loading.png')
+                self.steam.root, 'clientui', 'images', 'icons', 'stop_loading.png')
         else:
             cross_icon_path = os.path.join(
-                self.root, 'clientui', 'images', 'icons', 'track_play.png')
+                self.steam.root, 'clientui', 'images', 'icons', 'track_play.png')
         if os.path.isfile(cross_icon_path):
             cross_icon = QIcon(cross_icon_path)
         else:
@@ -234,80 +229,86 @@ QToolButton:hover {
         else:
             self.logout_action.setToolTip("")
 
-def store_login_cookie(root):
-    username = get_last_user(root)
-    userpath = os.path.join(root, 'acolyte', username, 'config.vdf')
-    configpath = os.path.join(root, 'config', 'config.vdf')
-    os.makedirs(os.path.dirname(userpath), exist_ok=True)
-    copyfile(configpath, userpath)
 
+class Steam:
 
-def remove_login_cookie(root, username):
-    userpath = os.path.join(root, 'acolyte', username, 'config.vdf')
-    if os.path.isfile(userpath):
-        os.remove(userpath)
+    STEAM_ROOT_PATH = [
+        '~/.local/share/Steam',
+        '~/.steam/root',
+        '~/.steam',
+    ]
 
+    def __init__(self, root=None):
+        self.root = root or self.find_root()
 
-def has_cookie(root, username):
-    userpath = os.path.join(root, 'acolyte', username, 'config.vdf')
-    return bool(username) and os.path.isfile(userpath)
+    def store_login_cookie(self):
+        username = self.get_last_user()
+        userpath = os.path.join(self.root, 'acolyte', username, 'config.vdf')
+        configpath = os.path.join(self.root, 'config', 'config.vdf')
+        os.makedirs(os.path.dirname(userpath), exist_ok=True)
+        copyfile(configpath, userpath)
 
+    def remove_login_cookie(self, username):
+        userpath = os.path.join(self.root, 'acolyte', username, 'config.vdf')
+        if os.path.isfile(userpath):
+            os.remove(userpath)
 
-def switch_user(root, username):
-    """Switch login config to given user. Do not use this while steam is
-    running."""
-    set_last_user(root, username)
-    if not username:
+    def has_cookie(self, username):
+        userpath = os.path.join(self.root, 'acolyte', username, 'config.vdf')
+        return bool(username) and os.path.isfile(userpath)
+
+    def switch_user(self, username):
+        """Switch login config to given user. Do not use this while steam is
+        running."""
+        self.set_last_user(username)
+        if not username:
+            return True
+        userpath = os.path.join(self.root, 'acolyte', username, 'config.vdf')
+        configpath = os.path.join(self.root, 'config', 'config.vdf')
+        if not os.path.isfile(userpath):
+            print(f"No stored config found for {username!r}", file=sys.stderr)
+            return False
+        copyfile(userpath, configpath)
         return True
-    userpath = os.path.join(root, 'acolyte', username, 'config.vdf')
-    configpath = os.path.join(root, 'config', 'config.vdf')
-    if not os.path.isfile(userpath):
-        print(f"No stored config found for {username!r}", file=sys.stderr)
-        return False
-    copyfile(userpath, configpath)
-    return True
 
+    def get_last_user(self):
+        # Only linux (stored in registry on windows):
+        reg_file = os.path.expanduser('~/.steam/registry.vdf')
+        reg_data = vdf.loads(read_file(reg_file))
+        steam_config = reg_data['Registry']['HKCU']['Software']['Valve']['Steam']
+        return steam_config['AutoLoginUser']
 
-def get_last_user(root):
-    # Only linux (stored in registry on windows):
-    reg_file = os.path.expanduser('~/.steam/registry.vdf')
-    reg_data = vdf.loads(read_file(reg_file))
-    steam_config = reg_data['Registry']['HKCU']['Software']['Valve']['Steam']
-    return steam_config['AutoLoginUser']
+    def set_last_user(self, username):
+        reg_file = os.path.expanduser('~/.steam/registry.vdf')
+        reg_data = vdf.loads(read_file(reg_file))
+        steam_config = reg_data['Registry']['HKCU']['Software']['Valve']['Steam']
+        steam_config['AutoLoginUser'] = username
+        steam_config['RememberPassword'] = '1'
+        reg_data = vdf.dumps(reg_data, pretty=True)
+        with open(reg_file, 'wt') as f:
+            f.write(reg_data)
 
+    def run(self, args=()):
+        """Run steam."""
+        import subprocess
+        subprocess.call(['steam', *args])
 
-def set_last_user(root, username):
-    reg_file = os.path.expanduser('~/.steam/registry.vdf')
-    reg_data = vdf.loads(read_file(reg_file))
-    steam_config = reg_data['Registry']['HKCU']['Software']['Valve']['Steam']
-    steam_config['AutoLoginUser'] = username
-    steam_config['RememberPassword'] = '1'
-    reg_data = vdf.dumps(reg_data, pretty=True)
-    with open(reg_file, 'wt') as f:
-        f.write(reg_data)
+    def read_config(self, filename='config.vdf'):
+        """Read steam config.vdf file."""
+        conf = os.path.join(self.root, 'config', filename)
+        text = read_file(conf)
+        return vdf.loads(text)
 
-
-def run_steam(args=()):
-    """Run steam."""
-    import subprocess
-    subprocess.call(['steam', *args])
-
-
-def read_steam_config(root, filename='config.vdf'):
-    """Read steam config.vdf file."""
-    conf = os.path.join(root, 'config', filename)
-    text = read_file(conf)
-    return vdf.loads(text)
-
-
-def find_steam_root():
-    """Locate and return the root path for the steam program files and user
-    configuration."""
-    for root in STEAM_ROOT_PATH:
-        root = os.path.expanduser(root)
-        conf = os.path.join(root, 'config', 'config.vdf')
-        if os.path.isdir(root) and os.path.isfile(conf):
-            return root
+    @classmethod
+    def find_root(cls):
+        """Locate and return the root path for the steam program files and user
+        configuration."""
+        for root in cls.STEAM_ROOT_PATH:
+            root = os.path.expanduser(root)
+            conf = os.path.join(root, 'config', 'config.vdf')
+            if os.path.isdir(root) and os.path.isfile(conf):
+                return root
+        raise RuntimeError("""Unable to find steam user path!""")
 
 
 def read_file(filename):
