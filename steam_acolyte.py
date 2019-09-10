@@ -20,6 +20,7 @@ import vdf
 from docopt import docopt
 
 from PyQt5.QtCore import QTimer
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (
     QApplication, QDialog, QFrame, QLabel, QAction, QStyle,
     QHBoxLayout, QVBoxLayout, QToolButton)
@@ -83,6 +84,10 @@ def create_login_dialog(root):
             UserWidget(window, root, persona_name, account_name))
     layout.addWidget(
         UserWidget(window, root, "(other)", ""))
+    # steal window icon:
+    steam_icon_path = os.path.join(root, 'public', 'steam_tray.ico')
+    if os.path.isfile(steam_icon_path):
+        window.setWindowIcon(QIcon(steam_icon_path))
     return window
 
 
