@@ -72,11 +72,12 @@ def create_login_dialog(steam):
     window.setLayout(layout)
     window.setWindowTitle("Steam Acolyte")
     users = steam.read_config('loginusers.vdf')['users']
-    for userinfo in users.values():
+    for steam_id, userinfo in users.items():
         persona_name = userinfo['PersonaName']
         account_name = userinfo['AccountName']
         layout.addWidget(
-            UserWidget(window, steam, persona_name, account_name))
+            UserWidget(window, steam, persona_name, account_name,
+                       f"UID: {steam_id}"))
     layout.addWidget(
         UserWidget(window, steam, "(other)", ""))
     # steal window icon:
@@ -99,7 +100,7 @@ QDialog {
 
 class UserWidget(QFrame):
 
-    def __init__(self, parent, steam, persona_name, account_name):
+    def __init__(self, parent, steam, persona_name, account_name, steam_id=""):
         super().__init__(parent)
         self.steam = steam
         self.user = account_name
@@ -115,6 +116,7 @@ class UserWidget(QFrame):
                 steam.root, 'clientui', 'images', 'icons', 'nav_customize.png')
         if os.path.isfile(icon_path):
             ico_label.setPixmap(QIcon(icon_path).pixmap(QSize(128, 128)))
+            ico_label.setToolTip(steam_id)
 
         top_label = QLabel(persona_name)
         bot_label = QLabel(account_name or "New account")
