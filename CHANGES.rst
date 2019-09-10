@@ -1,6 +1,14 @@
 CHANGES
 -------
 
+0.0.5
+~~~~~
+
+- hide "logout" button if action is not available
+- update user list after steam exits
+- fix mouseover highlighting not working after steam exits
+
+
 0.0.4
 ~~~~~
 
