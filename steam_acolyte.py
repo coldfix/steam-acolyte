@@ -130,15 +130,14 @@ class UserWidget(QFrame):
         labels.addWidget(bot_label)
         self.logout_action = QAction()
         self.logout_action.triggered.connect(self.logout_clicked)
-        button = QToolButton()
-        button.setDefaultAction(self.logout_action)
+        self.logout_button = QToolButton()
+        self.logout_button.setDefaultAction(self.logout_action)
         layout.addWidget(ico_label)
         layout.addSpacing(10)
         layout.addLayout(labels)
         layout.addStretch()
         layout.addSpacing(10)
-        layout.addWidget(button)
-        button.setVisible(bool(account_name))
+        layout.addWidget(self.logout_button)
         self.update_ui()
         self.setLayout(layout)
         self.setFrameShape(QFrame.Box)
@@ -216,20 +215,18 @@ QToolButton:hover {
 
     def update_ui(self):
         enabled = self.steam.has_cookie(self.user)
+        self.logout_button.setVisible(enabled)
         self.logout_action.setEnabled(enabled)
 
         if enabled:
             cross_icon_path = os.path.join(
                 self.steam.root, 'clientui', 'images', 'icons', 'stop_loading.png')
-        else:
-            cross_icon_path = os.path.join(
-                self.steam.root, 'clientui', 'images', 'icons', 'track_play.png')
-        if os.path.isfile(cross_icon_path):
-            cross_icon = QIcon(cross_icon_path)
-        else:
-            cross_icon = self.style().standardIcon(QStyle.SP_DialogCancelButton)
-
-        self.logout_action.setIcon(cross_icon)
+            if os.path.isfile(cross_icon_path):
+                cross_icon = QIcon(cross_icon_path)
+            else:
+                cross_icon = self.style().standardIcon(
+                    QStyle.SP_DialogCancelButton)
+            self.logout_action.setIcon(cross_icon)
 
         if enabled:
             self.logout_action.setToolTip("Delete saved login")
