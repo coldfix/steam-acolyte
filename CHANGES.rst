@@ -1,6 +1,18 @@
 CHANGES
 -------
 
+0.0.4
+~~~~~
+
+- more modern dark theme
+- show username along display name
+- show tooltip with user ID
+- steal some icons from steam application files
+- add button for logging out
+- add button to login with new account
+- fix exception in except-handler ;)
+
+
 0.0.3
 ~~~~~
 
