@@ -1,10 +1,6 @@
 Steam Acolyte
 =============
 
-.. raw:: html
-
-   <img src="https://raw.githubusercontent.com/coldfix/steam-acolyte/master/screenshot.png" align="right" title="Screenshot (usernames were changed)">
-
 Lightweight user account switcher/login keeper for steam.
 
 This tool provides a simple UI to switch between different steam user accounts
@@ -12,6 +8,8 @@ without having to reenter your password/2FA. This works by copying the
 credentials depot which contains a login token for the last active user to a
 temporary location. This config is restored to the appropriate location when
 the particular user is selected from the UI.
+
+|Screenshot|
 
 There is no magic interaction with steam here, and we do not store any
 credentials independently from steam!
@@ -42,3 +40,8 @@ invalidate the login token)!
 It is adviceable not to mix launching steam via acolyte or regularly (this
 might result in your active logins being invalidated), and I therefore
 recommend modifying your steam launcher to execute ``steam-acolyte``.
+
+
+.. |Screenshot| image:: https://raw.githubusercontent.com/coldfix/steam-acolyte/master/screenshot.png
+   :target:             https://raw.githubusercontent.com/coldfix/steam-acolyte/master/screenshot.png
+   :alt:                Screenshot (usernames were changed)
