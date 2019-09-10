@@ -16,8 +16,6 @@ the particular user is selected from the UI.
 There is no magic interaction with steam here, and we do not store any
 credentials independently from steam!
 
-Note that only linux is supported currently. Windows support is planned.
-
 
 Installation
 ------------

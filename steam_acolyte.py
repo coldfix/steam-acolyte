@@ -242,8 +242,9 @@ class Steam:
         '~/.steam',
     ]
 
-    def __init__(self, root=None):
+    def __init__(self, root=None, exe=None):
         self.root = root or self.find_root()
+        self.exe = exe or self.find_exe()
 
     def store_login_cookie(self):
         username = self.get_last_user()
@@ -276,26 +277,36 @@ class Steam:
         return True
 
     def get_last_user(self):
-        # Only linux (stored in registry on windows):
-        reg_file = os.path.expanduser('~/.steam/registry.vdf')
-        reg_data = vdf.loads(read_file(reg_file))
-        steam_config = reg_data['Registry']['HKCU']['Software']['Valve']['Steam']
-        return steam_config['AutoLoginUser']
+        if sys.platform == 'win32':
+            return read_steam_registry_value("AutoLoginUser")
+        else:
+            reg_file = os.path.expanduser('~/.steam/registry.vdf')
+            reg_data = vdf.loads(read_file(reg_file))
+            steam_config = reg_data['Registry']['HKCU']['Software']['Valve']['Steam']
+            return steam_config['AutoLoginUser']
 
     def set_last_user(self, username):
-        reg_file = os.path.expanduser('~/.steam/registry.vdf')
-        reg_data = vdf.loads(read_file(reg_file))
-        steam_config = reg_data['Registry']['HKCU']['Software']['Valve']['Steam']
-        steam_config['AutoLoginUser'] = username
-        steam_config['RememberPassword'] = '1'
-        reg_data = vdf.dumps(reg_data, pretty=True)
-        with open(reg_file, 'wt') as f:
-            f.write(reg_data)
+        if sys.platform == 'win32':
+            import winreg as reg
+            with reg.CreateKey(
+                    reg.HKEY_CURRENT_USER, r"SOFTWARE\Valve\Steam",
+                    ) as key:
+                reg.SetValueEx(key, "AutoLoginUser", 0, reg.REG_SZ, username)
+                reg.SetValueEx(key, "RememberPassword", 0, reg.REG_DWORD, 1)
+        else:
+            reg_file = os.path.expanduser('~/.steam/registry.vdf')
+            reg_data = vdf.loads(read_file(reg_file))
+            steam_config = reg_data['Registry']['HKCU']['Software']['Valve']['Steam']
+            steam_config['AutoLoginUser'] = username
+            steam_config['RememberPassword'] = '1'
+            reg_data = vdf.dumps(reg_data, pretty=True)
+            with open(reg_file, 'wt') as f:
+                f.write(reg_data)
 
     def run(self, args=()):
         """Run steam."""
         import subprocess
-        subprocess.call(['steam', *args])
+        subprocess.call([self.exe, *args])
 
     def read_config(self, filename='config.vdf'):
         """Read steam config.vdf file."""
@@ -307,18 +318,35 @@ class Steam:
     def find_root(cls):
         """Locate and return the root path for the steam program files and user
         configuration."""
-        for root in cls.STEAM_ROOT_PATH:
-            root = os.path.expanduser(root)
-            conf = os.path.join(root, 'config', 'config.vdf')
-            if os.path.isdir(root) and os.path.isfile(conf):
-                return root
+        if sys.platform == 'win32':
+            return read_steam_registry_value("SteamPath")
+        else:
+            for root in cls.STEAM_ROOT_PATH:
+                root = os.path.expanduser(root)
+                conf = os.path.join(root, 'config', 'config.vdf')
+                if os.path.isdir(root) and os.path.isfile(conf):
+                    return root
         raise RuntimeError("""Unable to find steam user path!""")
+
+    @classmethod
+    def find_exe(cls):
+        if sys.platform == 'win32':
+            return read_steam_registry_value("SteamExe")
+        else:
+            return 'steam'
 
 
 def read_file(filename):
     """Read full contents of given file."""
     with open(filename) as f:
         return f.read()
+
+
+def read_steam_registry_value(value_name):
+    import winreg
+    with winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER, r"SOFTWARE\Valve\Steam") as key:
+        return winreg.QueryValueEx(key, value_name)[0]
 
 
 def except_handler(*args, **kwargs):
