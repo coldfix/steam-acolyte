@@ -19,6 +19,9 @@ __url__     = "https://github.com/coldfix/steam-acolyte"
 import vdf
 from docopt import docopt
 
+from PyQt5.QtCore import QTimer
+from PyQt5.QtWidgets import QApplication, QDialog, QHBoxLayout, QPushButton
+
 import os
 import sys
 from shutil import copyfile
@@ -51,7 +54,6 @@ def main(args=None):
 
 
 def run_gui(root):
-    from PyQt5.QtWidgets import QApplication
     import signal
     app = QApplication([])
     sys.excepthook = except_handler
@@ -68,7 +70,6 @@ def run_gui(root):
 
 
 def create_login_dialog(root):
-    from PyQt5.QtWidgets import QDialog, QHBoxLayout, QPushButton
     window = QDialog()
     layout = QHBoxLayout()
     window.setLayout(layout)
@@ -161,7 +162,6 @@ def read_file(filename):
 
 
 def except_handler():
-    from PyQt5.QtWidgets import QApplication
     import traceback
     traceback.print_exception()
     QApplication.quit()
@@ -169,7 +169,6 @@ def except_handler():
 
 def interrupt_handler(signum, frame):
     """Handle KeyboardInterrupt: quit application."""
-    from PyQt5.QtWidgets import QApplication
     QApplication.quit()
 
 
@@ -178,7 +177,6 @@ def safe_timer(timeout, func, *args, **kwargs):
     Create a timer that is safe against garbage collection and overlapping
     calls. See: http://ralsina.me/weblog/posts/BB974.html
     """
-    from PyQt5.QtCore import QTimer
     def timer_event():
         try:
             func(*args, **kwargs)
