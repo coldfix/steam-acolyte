@@ -88,6 +88,17 @@ def create_login_dialog(root):
     steam_icon_path = os.path.join(root, 'public', 'steam_tray.ico')
     if os.path.isfile(steam_icon_path):
         window.setWindowIcon(QIcon(steam_icon_path))
+    window.setStyleSheet("""
+QDialog {
+    background: qlineargradient(
+        x1: 0, y1: 0,
+        x2: 0, y2: 1,
+        stop: 0 #1B2137,
+        stop: 1 #2A2E33
+    );
+    color: #DDDDDD;
+}
+    """)
     return window
 
 
@@ -110,8 +121,12 @@ class UserWidget(QFrame):
         if os.path.isfile(icon_path):
             ico_label.setPixmap(QIcon(icon_path).pixmap(QSize(128, 128)))
 
+        cross_icon = self.style().standardIcon(QStyle.SP_DialogCancelButton)
+
         top_label = QLabel(persona_name)
         bot_label = QLabel(account_name or "New account")
+        top_label.setObjectName("PersonaName")
+        bot_label.setObjectName("AccountName")
         top_font = top_label.font()
         top_font.setBold(True)
         top_font.setPointSize(top_font.pointSize() + 2)
@@ -119,8 +134,7 @@ class UserWidget(QFrame):
         labels.addWidget(top_label)
         labels.addWidget(bot_label)
         self.logout_action = QAction()
-        self.logout_action.setIcon(
-            self.style().standardIcon(QStyle.SP_DialogCancelButton))
+        self.logout_action.setIcon(cross_icon)
         self.logout_action.triggered.connect(self.logout_clicked)
         button = QToolButton()
         button.setDefaultAction(self.logout_action)
@@ -140,23 +154,28 @@ QFrame {
     background: qlineargradient(
         x1: 0, y1: 0,
         x2: 0, y2: 1,
-        stop: 0 #FAFBFE,
-        stop: 1 #DCDEF1
+        stop: 1 #383E46,
+        stop: 0 #4A4E53
     );
 
     border-style: solid;
     border-width: 1px;
     border-radius: 10px;
     border-color: #AAAAAA;
+    color: #DDDDDD;
 }
 
 QFrame:hover {
     background: qlineargradient(
         x1: 0, y1: 0,
         x2: 0, y2: 1,
-        stop: 0 #DADBDE,
-        stop: 1 #CCCEC1
+        stop: 0 #585E66,
+        stop: 1 #6A6E73
     );
+}
+
+QLabel#PersonaName {
+    color: white;
 }
 
 QLabel {
@@ -170,6 +189,14 @@ QLabel:hover {
 
 QToolButton {
     border: none;
+    padding: 3px;
+}
+QToolButton:hover {
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 5px;
+    border-color: #5A5E63;
+    background: #565460;
 }
         """)
 
