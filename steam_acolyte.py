@@ -138,7 +138,6 @@ class UserWidget(QFrame):
         layout.addStretch()
         layout.addSpacing(10)
         layout.addWidget(self.logout_button)
-        self.update_ui()
         self.setLayout(layout)
         self.setFrameShape(QFrame.Box)
         self.setFrameShadow(QFrame.Raised)
@@ -192,6 +191,7 @@ QToolButton:hover {
     background: #565460;
 }
         """)
+        self.update_ui()
 
     def login_clicked(self):
         steam = self.steam
