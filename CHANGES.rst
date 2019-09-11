@@ -1,6 +1,13 @@
 CHANGES
 -------
 
+0.0.9
+~~~~~
+
+- fix broken EXE due to bug in pyinstaller with pyqt 5.12.3
+- sort user list by user display name
+
+
 0.0.8
 ~~~~~
 
