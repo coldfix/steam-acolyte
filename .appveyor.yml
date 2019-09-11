@@ -1,0 +1,37 @@
+platform:
+  - x64
+
+environment:
+  global:
+    PYTHON: 'C:\Python37-x64'
+
+install:
+  - set
+  - set "PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%"
+
+build: off
+
+test_script:
+  - pip install -e .
+  - pip install flake8 pyinstaller
+  - flake8
+  - if "%APPVEYOR_REPO_TAG%" == "1" ( set TAG=%APPVEYOR_REPO_TAG_NAME% )
+    else ( set TAG=%APPVEYER_JOB_NUMBER% )
+  - python -m PyInstaller
+        --windowed --onefile
+        --name acolyte-%TAG%
+        steam_acolyte.py
+
+artifacts:
+  - path: dist/acolyte-*.exe
+
+deploy:
+  provider: GitHub
+  artifact: /acolyte-.*\.exe/
+  description: Single file redistributable
+  auth_token:
+    secure: Y046OI+Lf52sMlPE1pHFw+JUbqJoVsuHtMxcCC3E/vggOgaaFO3x702Urn9DqyZM
+  force_update: true
+  on:
+    APPVEYOR_REPO_TAG: true
+    PLATFORM: x64
