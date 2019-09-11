@@ -27,6 +27,22 @@ I recommend using pipx_ rather than *pip*.
 
 .. _pipx: https://pipxproject.github.io/pipx/
 
+For windows, an all-inclusive .exe file can be created using pyinstaller from
+the development files as follows::
+
+    pip install pyinstaller
+
+    python -m PyInstaller ^
+        --onefile --windowed ^
+        --name steam-acolyte ^
+        --icon "C:\Program Files (x86)\Steam\public\steam_tray.ico" ^
+        steam_acolyte.py
+
+For your convenience, a prebuilt .exe can also be downloaded from the `github
+releases`_ page.
+
+.. _github releases: https://github.com/coldfix/steam-acolyte/releases
+
 
 Usage
 -----
