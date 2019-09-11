@@ -1,6 +1,14 @@
 CHANGES
 -------
 
+0.0.7
+~~~~~
+
+- fix backward incompatible syntax with py3.5
+- automatic releases
+- provide .exe
+
+
 0.0.6
 ~~~~~
 

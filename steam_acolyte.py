@@ -13,7 +13,7 @@ Options:
 """
 
 __title__   = "steam-acolyte"
-__version__ = "0.0.6"
+__version__ = "0.0.7"
 __url__     = "https://github.com/coldfix/steam-acolyte"
 
 import vdf
