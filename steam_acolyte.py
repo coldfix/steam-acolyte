@@ -73,15 +73,16 @@ def create_login_dialog(steam):
     window.setWindowTitle("Steam Acolyte")
     users = steam.read_config('loginusers.vdf')['users']
     users = sorted(
-        [(steam_id, user_info['AccountName'], user_info['PersonaName'])
+        [SteamUser(steam_id,
+                   user_info['AccountName'],
+                   user_info['PersonaName'],
+                   user_info['Timestamp'])
          for steam_id, user_info in users.items()],
-        key=lambda u: (u[2].lower(), u[1].lower(), u[0]))
-    for steam_id, account_name, persona_name in users:
-        layout.addWidget(
-            UserWidget(window, steam, persona_name, account_name,
-                       "UID: {}".format(steam_id)))
+        key=lambda u: (u.persona_name.lower(), u.account_name.lower()))
+    for user in users:
+        layout.addWidget(UserWidget(window, steam, user))
     layout.addWidget(
-        UserWidget(window, steam, "(other)", ""))
+        UserWidget(window, steam, SteamUser('', '', '', '')))
     # steal window icon:
     steam_icon_path = os.path.join(steam.root, 'public', 'steam_tray.ico')
     if os.path.isfile(steam_icon_path):
@@ -102,15 +103,15 @@ QDialog {
 
 class UserWidget(QFrame):
 
-    def __init__(self, parent, steam, persona_name, account_name, steam_id=""):
+    def __init__(self, parent, steam, user):
         super().__init__(parent)
         self.steam = steam
-        self.user = account_name
+        self.user = user
         layout = QHBoxLayout()
         labels = QVBoxLayout()
 
         ico_label = QLabel()
-        if account_name:
+        if user.account_name:
             icon_path = os.path.join(
                 steam.root, 'clientui', 'images', 'icons', 'nav_profile_idle.png')
         else:
@@ -118,10 +119,11 @@ class UserWidget(QFrame):
                 steam.root, 'clientui', 'images', 'icons', 'nav_customize.png')
         if os.path.isfile(icon_path):
             ico_label.setPixmap(QIcon(icon_path).pixmap(QSize(128, 128)))
-            ico_label.setToolTip(steam_id)
+            ico_label.setToolTip(user.steam_id and
+                                 "UID: {}".format(user.steam_id))
 
-        top_label = QLabel(persona_name)
-        bot_label = QLabel(account_name or "New account")
+        top_label = QLabel(user.persona_name or "(other)")
+        bot_label = QLabel(user.account_name or "New account")
         top_label.setObjectName("PersonaName")
         bot_label.setObjectName("AccountName")
         top_font = top_label.font()
@@ -199,7 +201,7 @@ QToolButton:hover {
         steam = self.steam
         steam.login_window.close()
         steam.login_window = None
-        self.steam.switch_user(self.user)
+        self.steam.switch_user(self.user.account_name)
         self.steam.run()
         self.steam.store_login_cookie()
         # Close and recreate after steam is finished. This serves two purposes:
@@ -209,14 +211,14 @@ QToolButton:hover {
         steam.login_window.show()
 
     def logout_clicked(self):
-        self.steam.remove_login_cookie(self.user)
+        self.steam.remove_login_cookie(self.user.account_name)
         self.update_ui()
 
     def mousePressEvent(self, event):
         self.login_clicked()
 
     def update_ui(self):
-        enabled = self.steam.has_cookie(self.user)
+        enabled = self.steam.has_cookie(self.user.account_name)
         self.logout_button.setVisible(enabled)
         self.logout_action.setEnabled(enabled)
 
@@ -234,6 +236,15 @@ QToolButton:hover {
             self.logout_action.setToolTip("Delete saved login")
         else:
             self.logout_action.setToolTip("")
+
+
+class SteamUser:
+
+    def __init__(self, steam_id, account_name, persona_name, timestamp):
+        self.steam_id = steam_id
+        self.account_name = account_name
+        self.persona_name = persona_name
+        self.timestamp = timestamp
 
 
 class Steam:
