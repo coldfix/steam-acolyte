@@ -1,6 +1,13 @@
 CHANGES
 -------
 
+0.0.8
+~~~~~
+
+- fix button appearing as standalone window for brief moment at startup
+- fix the autodeployed .exe name to include the version tag
+
+
 0.0.7
 ~~~~~
 
