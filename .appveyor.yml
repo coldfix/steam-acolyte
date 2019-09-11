@@ -26,7 +26,6 @@ artifacts:
 deploy:
   provider: GitHub
   artifact: /acolyte-.*\.exe/
-  description: Single file redistributable
   auth_token:
     secure: Y046OI+Lf52sMlPE1pHFw+JUbqJoVsuHtMxcCC3E/vggOgaaFO3x702Urn9DqyZM
   force_update: true
