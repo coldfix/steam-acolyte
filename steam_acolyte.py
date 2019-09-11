@@ -290,8 +290,7 @@ class Steam:
         if sys.platform == 'win32':
             import winreg as reg
             with reg.CreateKey(
-                    reg.HKEY_CURRENT_USER, r"SOFTWARE\Valve\Steam",
-                    ) as key:
+                    reg.HKEY_CURRENT_USER, r"SOFTWARE\Valve\Steam") as key:
                 reg.SetValueEx(key, "AutoLoginUser", 0, reg.REG_SZ, username)
                 reg.SetValueEx(key, "RememberPassword", 0, reg.REG_DWORD, 1)
         else:
