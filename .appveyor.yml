@@ -15,11 +15,9 @@ test_script:
   - pip install -e .
   - pip install flake8 pyinstaller
   - flake8
-  - if "%APPVEYOR_REPO_TAG%" == "1" ( set TAG=%APPVEYOR_REPO_TAG_NAME% )
-    else ( set TAG=%APPVEYER_JOB_NUMBER% )
   - python -m PyInstaller
         --windowed --onefile
-        --name acolyte-%TAG%
+        --name acolyte-%APPVEYOR_REPO_TAG_NAME%
         steam_acolyte.py
 
 artifacts:
