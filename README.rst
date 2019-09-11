@@ -53,7 +53,7 @@ In order to switch users, exit steam via the "Exit" option. In particular do
 **not** use the "Change Account..." option from the steam menu (this will
 invalidate the login token)!
 
-It is adviceable not to mix launching steam via acolyte or regularly (this
+It is advisable not to mix launching steam via acolyte or regularly (this
 might result in your active logins being invalidated), and I therefore
 recommend modifying your steam launcher to execute ``steam-acolyte``.
 
