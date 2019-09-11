@@ -72,9 +72,11 @@ def create_login_dialog(steam):
     window.setLayout(layout)
     window.setWindowTitle("Steam Acolyte")
     users = steam.read_config('loginusers.vdf')['users']
-    for steam_id, userinfo in users.items():
-        persona_name = userinfo['PersonaName']
-        account_name = userinfo['AccountName']
+    users = sorted(
+        [(steam_id, user_info['AccountName'], user_info['PersonaName'])
+         for steam_id, user_info in users.items()],
+        key=lambda u: (u[2].lower(), u[1].lower(), u[0]))
+    for steam_id, account_name, persona_name in users:
         layout.addWidget(
             UserWidget(window, steam, persona_name, account_name,
                        "UID: {}".format(steam_id)))
