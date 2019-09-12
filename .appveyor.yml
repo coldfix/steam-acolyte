@@ -21,7 +21,7 @@ test_script:
   - python -m PyInstaller
         --windowed --onefile
         --name acolyte-%APPVEYOR_REPO_TAG_NAME%
-        steam_acolyte.py
+        steam_acolyte/__main__.py
 
 artifacts:
   - path: dist/acolyte-*.exe

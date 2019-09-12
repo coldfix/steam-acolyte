@@ -2,7 +2,7 @@ from setuptools import setup
 
 
 meta = {}
-with open('steam_acolyte.py', 'rb') as f:
+with open('steam_acolyte/__init__.py', 'rb') as f:
     try:
         exec(f.read(), meta, meta)
     except ImportError:     # ignore missing dependencies at setup time
