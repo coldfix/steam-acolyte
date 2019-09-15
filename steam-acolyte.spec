@@ -60,7 +60,9 @@ def get_version():
 a = Analysis(
     ['steam_acolyte/__main__.py'],
     pathex=['.'],
-    datas=collect_data_files('steam_acolyte'),
+    datas=(
+        collect_data_files('steam_acolyte') +
+        collect_data_files('importlib_resources'))
 )
 
 pyz = PYZ(a.pure, a.zipped_data)
