@@ -1,4 +1,6 @@
 # vim: ft=python
+from PyInstaller.utils.hooks import collect_data_files
+
 
 def get_version():
     import sys
@@ -58,9 +60,7 @@ def get_version():
 a = Analysis(
     ['steam_acolyte/__main__.py'],
     pathex=['.'],
-    datas=[
-        ('steam_acolyte/*.css', 'steam_acolyte'),
-    ]
+    datas=collect_data_files('steam_acolyte'),
 )
 
 pyz = PYZ(a.pure, a.zipped_data)
