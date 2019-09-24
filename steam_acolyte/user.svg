@@ -35,7 +35,7 @@
       cx="0" cy="0" r="50"
       stroke="none" fill="url(#bgcolor)" />
   </g>
-  <g transform="translate(50,-2)">
+  <g transform="translate(50,+5) scale(1.2, 1.2)">
     <path id="hood"
        d="M -0,10 C -10,10
        -10,18 -17,27 C -30,45
@@ -50,25 +50,14 @@
        -7,25 +0,25 Z"
        fill="url(#robecolor)" stroke="none" />
   </g>
-  <g transform="translate(50,0)">
-    <path id="robe"
+
+  <g transform="translate(50,-40) scale(2.0,2.2)">
+    <path id="collar"
        d="M -10,48 C -12,48
        -13,49 -15,51 C -12,55
        -5,57 0,57 C +5,57
        +12,55 +15,51 C +13,49
        +12,48 +10,48 Z
-
-       M -17.5,55 C -20,58
-       -26,73 -29,80 C -31,86
-       -20,93 -2,93
-       V 61 C -12,60
-       -15,57 -17.5,55 Z
-
-       M +17.5,55 C +20,58
-       +26,73 +29,80 C +31,86
-       +20,93 +2,93
-       V 61 C +12,60
-       +15,57 +17.5,55 Z
        "
        fill="url(#robecolor)" stroke="none" />
   </g>
