@@ -84,7 +84,7 @@ def create_login_dialog(steam):
     layout.addWidget(
         UserWidget(window, steam, SteamUser('', '', '', '')))
     # steal window icon:
-    steam_icon_path = os.path.join(steam.root, 'public', 'steam_tray.ico')
+    steam_icon_path = os.path.join(steam.data, 'public', 'steam_tray.ico')
     if os.path.isfile(steam_icon_path):
         window.setWindowIcon(QIcon(steam_icon_path))
     window.setStyleSheet("""
@@ -113,10 +113,10 @@ class UserWidget(QFrame):
         ico_label = QLabel()
         if user.account_name:
             icon_path = os.path.join(
-                steam.root, 'clientui', 'images', 'icons', 'nav_profile_idle.png')
+                steam.data, 'clientui', 'images', 'icons', 'nav_profile_idle.png')
         else:
             icon_path = os.path.join(
-                steam.root, 'clientui', 'images', 'icons', 'nav_customize.png')
+                steam.data, 'clientui', 'images', 'icons', 'nav_customize.png')
         if os.path.isfile(icon_path):
             ico_label.setPixmap(QIcon(icon_path).pixmap(QSize(128, 128)))
             ico_label.setToolTip(user.steam_id and
@@ -224,7 +224,7 @@ QToolButton:hover {
 
         if enabled:
             cross_icon_path = os.path.join(
-                self.steam.root, 'clientui', 'images', 'icons', 'stop_loading.png')
+                self.steam.data, 'clientui', 'images', 'icons', 'stop_loading.png')
             if os.path.isfile(cross_icon_path):
                 cross_icon = QIcon(cross_icon_path)
             else:
@@ -249,14 +249,26 @@ class SteamUser:
 
 class Steam:
 
+    # I tested this script on an ubuntu and archlinux machine, where I found
+    # the steam config and program files in different locations. In both cases
+    # there was also a path/symlink that pointed to the correct location, but
+    # since I don't know whether this is true for all distributions and steam
+    # versions, we go through all known prefixes anyway:
+    #
+    #             common name           ubuntu            archlinux
+    #   config    ~/.steam/steam@   ->  ~/.steam/steam    ~/.local/share/Steam
+    #   data      ~/.steam/root@    ->  ~/.steam          ~/.local/share/Steam
+
     STEAM_ROOT_PATH = [
         '~/.local/share/Steam',
+        '~/.steam/steam',
         '~/.steam/root',
         '~/.steam',
     ]
 
-    def __init__(self, root=None, exe=None):
+    def __init__(self, root=None, exe=None, data=None):
         self.root = root or self.find_root()
+        self.data = data or self.find_data()
         self.exe = exe or self.find_exe()
 
     def store_login_cookie(self):
@@ -329,17 +341,35 @@ class Steam:
 
     @classmethod
     def find_root(cls):
-        """Locate and return the root path for the steam program files and user
-        configuration."""
+        """Locate and return the root path for the steam user config."""
         if sys.platform == 'win32':
             return read_steam_registry_value("SteamPath")
         else:
+            # On arch and ubuntu, this is in '~/.steam/steam/', but as I'm not
+            # sure that's the case everywhere, we search through all known
+            # prefixes for good measure:
             for root in cls.STEAM_ROOT_PATH:
                 root = os.path.expanduser(root)
                 conf = os.path.join(root, 'config', 'config.vdf')
                 if os.path.isdir(root) and os.path.isfile(conf):
                     return root
         raise RuntimeError("""Unable to find steam user path!""")
+
+    @classmethod
+    def find_data(cls):
+        """Locate and return the root path for the steam program files."""
+        if sys.platform == 'win32':
+            return read_steam_registry_value("SteamPath")
+        else:
+            # On arch and ubuntu, this is in '~/.steam/root/', but as I'm not
+            # sure that's the case everywhere, we search through all known
+            # prefixes for good measure:
+            for root in cls.STEAM_ROOT_PATH:
+                root = os.path.expanduser(root)
+                data = os.path.join(root, 'clientui', 'images', 'icons')
+                if os.path.isdir(root) and os.path.isdir(data):
+                    return root
+        raise RuntimeError("""Unable to find steam program data!""")
 
     @classmethod
     def find_exe(cls):
