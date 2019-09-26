@@ -6,6 +6,8 @@ from PyQt5.QtWidgets import (
     QDialog, QFrame, QLabel, QAction, QStyle,
     QHBoxLayout, QVBoxLayout, QToolButton)
 
+from importlib_resources import read_text
+
 import os
 
 
@@ -30,17 +32,7 @@ def create_login_dialog(steam):
     steam_icon_path = os.path.join(steam.data, 'public', 'steam_tray.ico')
     if os.path.isfile(steam_icon_path):
         window.setWindowIcon(QIcon(steam_icon_path))
-    window.setStyleSheet("""
-QDialog {
-    background: qlineargradient(
-        x1: 0, y1: 0,
-        x2: 0, y2: 1,
-        stop: 0 #1B2137,
-        stop: 1 #2A2E33
-    );
-    color: #DDDDDD;
-}
-    """)
+    window.setStyleSheet(read_text(__package__, 'window.css'))
     return window
 
 
@@ -88,56 +80,6 @@ class UserWidget(QFrame):
         self.setLayout(layout)
         self.setFrameShape(QFrame.Box)
         self.setFrameShadow(QFrame.Raised)
-        self.setStyleSheet("""
-QFrame {
-    background: qlineargradient(
-        x1: 0, y1: 0,
-        x2: 0, y2: 1,
-        stop: 1 #383E46,
-        stop: 0 #4A4E53
-    );
-
-    border-style: solid;
-    border-width: 1px;
-    border-radius: 10px;
-    border-color: #AAAAAA;
-    color: #DDDDDD;
-}
-
-QFrame:hover {
-    background: qlineargradient(
-        x1: 0, y1: 0,
-        x2: 0, y2: 1,
-        stop: 0 #585E66,
-        stop: 1 #6A6E73
-    );
-}
-
-QLabel#PersonaName {
-    color: white;
-}
-
-QLabel {
-    background: transparent;
-    border: none;
-}
-QLabel:hover {
-    background: transparent;
-    border: none;
-}
-
-QToolButton {
-    border: none;
-    padding: 3px;
-}
-QToolButton:hover {
-    border-style: solid;
-    border-width: 1px;
-    border-radius: 5px;
-    border-color: #5A5E63;
-    background: #565460;
-}
-        """)
         self.update_ui()
 
     def login_clicked(self):

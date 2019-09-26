@@ -36,6 +36,7 @@ the development files as follows::
         --onefile --windowed ^
         --name steam-acolyte ^
         --icon "C:\Program Files (x86)\Steam\public\steam_tray.ico" ^
+        --add-data steam_acolyte/window.css:steam_acolyte
         steam_acolyte/__main__.py
 
 For your convenience, a prebuilt .exe can also be downloaded from the `github

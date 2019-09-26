@@ -21,6 +21,7 @@ test_script:
   - python -m PyInstaller
         --windowed --onefile
         --name acolyte-%APPVEYOR_REPO_TAG_NAME%
+        --add-data steam_acolyte/window.css:steam_acolyte
         steam_acolyte/__main__.py
 
 artifacts:
