@@ -11,6 +11,7 @@ Options:
     -r ROOT, --root ROOT        Steam root path
 """
 
+from steam_acolyte import __version__
 from steam_acolyte.steam import Steam
 
 from PyQt5.QtCore import QTimer
@@ -22,7 +23,7 @@ import sys
 
 
 def main(args=None):
-    opts = docopt(__doc__, args)
+    opts = docopt(__doc__, args, version=__version__)
     try:
         steam = Steam(opts['--root'])
     except RuntimeError as e:
