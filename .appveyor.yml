@@ -18,11 +18,8 @@ test_script:
   - pip install -e .
   - pip install flake8 pyinstaller
   - flake8
-  - python -m PyInstaller
-        --windowed --onefile
-        --name acolyte-%APPVEYOR_REPO_TAG_NAME%
-        --add-data steam_acolyte/window.css:steam_acolyte
-        steam_acolyte/__main__.py
+  - pyinstaller steam-acolyte.spec
+  - move dist\steam-acolyte.exe dist\acolyte-%APPVEYOR_REPO_TAG_NAME%.exe
 
 artifacts:
   - path: dist/acolyte-*.exe

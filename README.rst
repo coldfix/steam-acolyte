@@ -31,13 +31,7 @@ For windows, an all-inclusive .exe file can be created using pyinstaller from
 the development files as follows::
 
     pip install pyinstaller
-
-    python -m PyInstaller ^
-        --onefile --windowed ^
-        --name steam-acolyte ^
-        --icon "C:\Program Files (x86)\Steam\public\steam_tray.ico" ^
-        --add-data steam_acolyte/window.css:steam_acolyte
-        steam_acolyte/__main__.py
+    pyinstaller steam-acolyte.spec
 
 For your convenience, a prebuilt .exe can also be downloaded from the `github
 releases`_ page.
