@@ -1,10 +1,20 @@
 
 from PyQt5.QtGui import QIcon
 
-from importlib_resources import read_text
+from importlib_resources import read_text, path
 
 import os
 from types import SimpleNamespace
+
+
+def builtin_theme(steam):
+    return SimpleNamespace(
+        window_style = read_text(__package__, 'window.css'),
+        window_icon = load_icon_resource('acolyte.svg'),
+        delete_icon = load_icon_resource('delete.svg'),
+        user_icon = load_icon_resource('user.svg', 32, 32),
+        plus_icon = load_icon_resource('plus.svg', 32, 32),
+    )
 
 
 def steam_theme(steam):
@@ -25,7 +35,7 @@ def steam_theme(steam):
 
 
 THEMES = {
-    'default': steam_theme,
+    'default': builtin_theme,
     'steam': steam_theme,
 }
 
@@ -42,3 +52,8 @@ def load_icon_file(filename, *size):
     if os.path.isfile(filename):
         icon = QIcon(filename)
         return icon.pixmap(*size) if size else icon
+
+
+def load_icon_resource(name, *size):
+    with path(__package__, name) as p:
+        return load_icon_file(str(p), *size)

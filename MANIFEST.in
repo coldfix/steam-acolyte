@@ -1,3 +1,3 @@
 include README.rst
 include UNLICENSE
-recursive-include steam_acolyte *.css
+recursive-include steam_acolyte *.css *.svg

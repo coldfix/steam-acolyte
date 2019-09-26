@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg
+   width="128"
+   height="128"
+   viewBox="0 0 100 100"
+   version="1.1"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <linearGradient
+       id="hoodcolor"
+       x1="0" y1="0"
+       x2="100" y2="0"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-50,-50)">
+      <stop offset="0.0" stop-color="#ffffff" stop-opacity="1.0" />
+      <stop offset="0.5" stop-color="#f9f9f9" stop-opacity="0.8" />
+      <stop offset="1.0" stop-color="#cccccc" stop-opacity="0.6" />
+    </linearGradient>
+    <linearGradient
+       id="facecolor"
+       x1="0" y1="0"
+       x2="100" y2="0"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-50,-50)">
+      <stop offset="0.0" stop-color="#f1c27d" stop-opacity="1" />
+      <stop offset="0.5" stop-color="#f1c27d" stop-opacity="1" />
+      <stop offset="1.0" stop-color="#f1c27d" stop-opacity="1" />
+    </linearGradient>
+    <linearGradient
+       id="bgcolor"
+       x1="65" y1="0"
+       x2="40" y2="100"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-50,-50)">
+      <stop offset="0.0" stop-color="#06162d" stop-opacity="1" />
+      <stop offset="0.5" stop-color="#08255d" stop-opacity="1" />
+      <stop offset="1.0" stop-color="#0a87b8" stop-opacity="1" />
+    </linearGradient>
+  </defs>
+  <g transform="translate(50,50)">
+    <circle
+       id="circle" fill="url(#bgcolor)" stroke="none"
+       cx="0" cy="0" r="50" />
+  </g>
+  <g transform="translate(50,45) scale(1.35 1.35)">
+    <path
+       id="face" fill="url(#facecolor)" stroke="none"
+       d="M 0,-14 C -7,-14
+       -11,-11 -16,-1 -21,9
+       -9,22 0,22 9,22
+       21,9 16,-1 11,-11
+       7,-14 0,-14 Z
+
+       M 7,-2 C 9,-2
+       11,-2 11,0 11,1
+       9,3 7,3 5,3
+       3,1 3,0 3,-2
+       5,-2 7,-2 Z
+
+       M -7,-2 C -5,-2
+       -3,-2 -3,0 -3,1
+       -5,3 -7,3 -9,3
+       -11,1 -11,0 -11,-2
+       -9,-2 -7,-2 Z" />
+  </g>
+  <g transform="translate(50,50) scale(1.0 1.0)">
+    <path
+       id="hood" fill="url(#hoodcolor)" stroke="none"
+       d="M 0,-45 C -18,-45
+       -20,-20 -32,-2 -50,25
+       -45,35 0,35 45,35
+       50,25 32,-2 20,-20
+       18,-45 0,-45 Z
+
+       M 0,-20 C 11,-20
+       30,10 30,20 30,35
+       11,27 0,27 -11,27
+       -30,35 -30,20 -30,10
+       -11,-20 0,-20 Z" />
+  </g>
+</svg>
