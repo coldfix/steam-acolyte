@@ -42,8 +42,15 @@ class Steam:
         username = self.get_last_user()
         userpath = os.path.join(self.root, 'acolyte', username, 'config.vdf')
         configpath = os.path.join(self.root, 'config', 'config.vdf')
-        os.makedirs(os.path.dirname(userpath), exist_ok=True)
-        copyfile(configpath, userpath)
+        accounts = (
+            self.read_config('config.vdf')
+            ['InstallConfigStore']['Software']['Valve']['Steam']['Accounts'])
+        if accounts.get(username):
+            os.makedirs(os.path.dirname(userpath), exist_ok=True)
+            copyfile(configpath, userpath)
+        else:
+            print("Not replacing login data for logged out user: {!r}"
+                  .format(username))
 
     def remove_login_cookie(self, username):
         userpath = os.path.join(self.root, 'acolyte', username, 'config.vdf')
