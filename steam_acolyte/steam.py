@@ -57,6 +57,21 @@ class Steam:
         if os.path.isfile(userpath):
             os.remove(userpath)
 
+    def remove_user(self, username):
+        self.remove_login_cookie(username)
+        loginusers = self.read_config('loginusers.vdf')
+        loginusers['users'] = {
+            uid: info
+            for uid, info in loginusers['users'].items()
+            if info['AccountName'] != username
+        }
+        self.write_config('loginusers.vdf', loginusers)
+
+        config = self.read_config('config.vdf')
+        steam = config['InstallConfigStore']['Software']['Valve']['Steam']
+        steam['Accounts'].pop(username, None)
+        self.write_config('config.vdf', config)
+
     def has_cookie(self, username):
         userpath = os.path.join(self.root, 'acolyte', username, 'config.vdf')
         return bool(username) and os.path.isfile(userpath)
@@ -113,6 +128,11 @@ class Steam:
         text = read_file(conf)
         return vdf.loads(text)
 
+    def write_config(self, filename, data):
+        conf = os.path.join(self.root, 'config', filename)
+        text = vdf.dumps(data, pretty=True)
+        write_file(conf, text)
+
     @classmethod
     def find_root(cls):
         """Locate and return the root path for the steam user config."""
@@ -164,3 +184,9 @@ def read_file(filename):
     """Read full contents of given file."""
     with open(filename) as f:
         return f.read()
+
+
+def write_file(filename, text):
+    """Write file with the given text."""
+    with open(filename, 'wb') as f:
+        f.write(text.encode('utf-8'))

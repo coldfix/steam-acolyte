@@ -11,6 +11,7 @@ def builtin_theme(steam):
     return SimpleNamespace(
         window_style = read_text(__package__, 'window.css'),
         window_icon = load_icon_resource('acolyte.svg'),
+        logout_icon = load_icon_resource('logout.svg'),
         delete_icon = load_icon_resource('delete.svg'),
         user_icon = load_icon_resource('user.svg', 32, 32),
         plus_icon = load_icon_resource('plus.svg', 32, 32),
@@ -22,6 +23,9 @@ def steam_theme(steam):
         window_style = read_text('steam_acolyte', 'window.css'),
         window_icon = load_icon_file(os.path.join(
             steam.data, 'public', 'steam_tray.ico')),
+        logout_icon = load_icon_file(os.path.join(
+            steam.data, 'clientui', 'images', 'icons',
+            'left.png')),
         delete_icon = load_icon_file(os.path.join(
             steam.data, 'clientui', 'images', 'icons',
             'stop_loading.png')),

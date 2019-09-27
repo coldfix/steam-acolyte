@@ -2,7 +2,7 @@ from steam_acolyte.steam import SteamUser
 
 from PyQt5.QtWidgets import (
     QDialog, QFrame, QLabel, QAction, QStyle,
-    QHBoxLayout, QVBoxLayout, QToolButton)
+    QHBoxLayout, QVBoxLayout, QToolButton, QSizePolicy)
 
 
 def create_login_dialog(steam, theme):
@@ -34,6 +34,7 @@ class UserWidget(QFrame):
         self.theme = theme
         self.steam = steam
         self.user = user
+        self.setSizePolicy(QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed))
         layout = QHBoxLayout()
         labels = QVBoxLayout()
 
@@ -56,14 +57,22 @@ class UserWidget(QFrame):
         labels.addWidget(bot_label)
         self.logout_action = QAction()
         self.logout_action.triggered.connect(self.logout_clicked)
+        self.delete_action = QAction()
+        self.delete_action.triggered.connect(self.delete_clicked)
+        self.delete_action.setIcon(theme.delete_icon)
+        self.delete_action.setToolTip("Delete user from list")
         self.logout_button = QToolButton()
         self.logout_button.setDefaultAction(self.logout_action)
+        self.delete_button = QToolButton()
+        self.delete_button.setDefaultAction(self.delete_action)
+        layout.setSpacing(0)
         layout.addWidget(ico_label)
         layout.addSpacing(10)
         layout.addLayout(labels)
         layout.addStretch()
         layout.addSpacing(10)
         layout.addWidget(self.logout_button)
+        layout.addWidget(self.delete_button)
         self.setLayout(layout)
         self.setFrameShape(QFrame.Box)
         self.setFrameShadow(QFrame.Raised)
@@ -86,6 +95,11 @@ class UserWidget(QFrame):
         self.steam.remove_login_cookie(self.user.account_name)
         self.update_ui()
 
+    def delete_clicked(self):
+        self.steam.remove_user(self.user.account_name)
+        self.hide()
+        self.window().adjustSize()
+
     def mousePressEvent(self, event):
         self.login_clicked()
 
@@ -93,11 +107,13 @@ class UserWidget(QFrame):
         enabled = self.steam.has_cookie(self.user.account_name)
         self.logout_button.setVisible(enabled)
         self.logout_action.setEnabled(enabled)
+        self.delete_action.setEnabled(bool(self.user.account_name))
+        self.delete_button.setVisible(bool(self.user.account_name))
 
         if enabled:
             self.logout_action.setIcon(
-                self.theme.delete_icon or
-                self.style().standardIcon(QStyle.SP_DialogCancelButton))
+                self.theme.logout_icon or
+                self.style().standardIcon(QStyle.SP_ArrowLeft))
 
         if enabled:
             self.logout_action.setToolTip("Delete saved login")
