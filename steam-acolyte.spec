@@ -1,10 +1,11 @@
 # vim: ft=python
 from PyInstaller.utils.hooks import collect_data_files
 
+import sys
+import os
+
 
 def get_version():
-    import sys
-    import os
     if sys.platform != 'win32':
         return None
     from PyInstaller.utils.win32.versioninfo import (
@@ -75,6 +76,6 @@ exe = EXE(
     [],
     name='steam-acolyte',
     console=False,
-    icon=None,
+    icon='acolyte.ico' if os.path.isfile('acolyte.ico') else None,
     version=get_version(),
 )

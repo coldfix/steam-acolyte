@@ -9,6 +9,7 @@ Usage:
 
 Options:
     -r ROOT, --root ROOT        Steam root path
+    --theme NAME                Choose theme
 """
 
 from steam_acolyte import __version__
@@ -39,11 +40,12 @@ def main(args=None):
         steam.run()
         steam.store_login_cookie()
     else:
-        run_gui(steam)
+        run_gui(steam, theme_name=opts['--theme'])
 
 
-def run_gui(steam):
+def run_gui(steam, theme_name):
     from steam_acolyte.window import create_login_dialog
+    from steam_acolyte.theme import load_theme
     import signal
     app = QApplication([])
     sys.excepthook = except_handler
@@ -54,7 +56,8 @@ def run_gui(steam):
     # http://stackoverflow.com/questions/4938723/what-is-the-correct-way-to-make-my-pyqt-application-quit-when-killed-from-the-console
     signal.signal(signal.SIGINT, interrupt_handler)
     safe_timer(50, lambda: None)
-    steam.login_window = create_login_dialog(steam)
+    theme = load_theme(steam, theme_name)
+    steam.login_window = create_login_dialog(steam, theme)
     steam.login_window.show()
     return app.exec_()
 

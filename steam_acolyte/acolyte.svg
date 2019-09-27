@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg
+   width="256"
+   height="256"
+   viewBox="0 0 100 100"
+   version="1.1"
+   id="acolyte"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <linearGradient
+       id="robecolor"
+       x1="0" y1="0"
+       x2="100" y2="0"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-50,-50)">
+      <stop offset="0.0" stop-color="#ffffff" stop-opacity="1.00" />
+      <stop offset="0.5" stop-color="#f9f9f9" stop-opacity="0.95" />
+      <stop offset="1.0" stop-color="#cccccc" stop-opacity="0.90" />
+    </linearGradient>
+    <linearGradient
+       id="bgcolor"
+       x1="65" y1="0"
+       x2="40" y2="100"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-50,-50)">
+      <stop offset="0.0" stop-color="#06162d" stop-opacity="1" />
+      <stop offset="0.5" stop-color="#08255d" stop-opacity="1" />
+      <stop offset="1.0" stop-color="#0a87b8" stop-opacity="1" />
+    </linearGradient>
+  </defs>
+  <g transform="translate(50,50)">
+    <circle id="circle"
+      cx="0" cy="0" r="50"
+      stroke="none" fill="url(#bgcolor)" />
+  </g>
+  <g transform="translate(50,+5) scale(1.2, 1.2)">
+    <path id="hood"
+       d="M -0,10 C -10,10
+       -10,18 -17,27 C -30,45
+       -14,45 +0,45 C +14,45
+       +30,45 +17,27 C +10,18
+       +10,10 -0,10 Z
+
+       M +0,25 C +7,25
+       +13,30 +13,35 C +13,41
+       +8,42 +0,42 C -8,42
+       -13,41 -13,35 C -13,30
+       -7,25 +0,25 Z"
+       fill="url(#robecolor)" stroke="none" />
+  </g>
+
+  <g transform="translate(50,-40) scale(2.0,2.2)">
+    <path id="collar"
+       d="M -10,48 C -12,48
+       -13,49 -15,51 C -12,55
+       -5,57 0,57 C +5,57
+       +12,55 +15,51 C +13,49
+       +12,48 +10,48 Z
+       "
+       fill="url(#robecolor)" stroke="none" />
+  </g>
+</svg>

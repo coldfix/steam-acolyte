@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg
+   width="32"
+   height="32"
+   viewBox="0 0 100 100"
+   version="1.1"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <linearGradient
+       id="fgcolor"
+       x1="0" y1="0"
+       x2="100" y2="0"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-50,-50)">
+      <stop offset="0.0" stop-color="#cccccc" stop-opacity="1" />
+      <stop offset="0.5" stop-color="#f9f9f9" stop-opacity="1" />
+      <stop offset="1.0" stop-color="#ffffff" stop-opacity="1" />
+    </linearGradient>
+    <linearGradient
+       id="bgcolor"
+       x1="65" y1="0"
+       x2="40" y2="100"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-50,-50)">
+      <stop offset="0.0" stop-color="#777777" stop-opacity="1" />
+      <stop offset="0.3" stop-color="#555555" stop-opacity="1" />
+      <stop offset="1.0" stop-color="#444444" stop-opacity="1" />
+    </linearGradient>
+  </defs>
+  <g transform="translate(50,50)">
+    <circle
+       id="circle" fill="url(#bgcolor)" stroke="none"
+       cx="0" cy="0" r="50" />
+  </g>
+  <g transform="translate(50,50)">
+    <path
+       id="hood" stroke="url(#fgcolor)" stroke-width="8"
+       d="M 0,-30 L 0,+30
+       M -30,0 L 30,0" />
+  </g>
+</svg>
