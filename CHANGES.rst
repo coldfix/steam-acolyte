@@ -1,6 +1,17 @@
 CHANGES
 -------
 
+0.1.0
+~~~~~
+
+- fix incorrect steam path on ubuntu
+- avoid storing config if obviously logged out
+- refactor into package
+- add version information to windows EXE
+- add icon to windows EXE
+- use our own acolyte icon theme
+
+
 0.0.9
 ~~~~~
 
