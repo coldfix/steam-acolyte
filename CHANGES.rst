@@ -1,6 +1,12 @@
 CHANGES
 -------
 
+0.1.1
+~~~~~
+
+- fix exception after closing steam
+
+
 0.1.0
 ~~~~~
 
