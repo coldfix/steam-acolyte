@@ -79,7 +79,7 @@ class UserWidget(QFrame):
         # Close and recreate after steam is finished. This serves two purposes:
         # 1. update user list and widget state
         # 2. fix ":hover" selector not working on linux after hide+show
-        steam.login_window = create_login_dialog(steam)
+        steam.login_window = create_login_dialog(steam, self.theme)
         steam.login_window.show()
 
     def logout_clicked(self):
