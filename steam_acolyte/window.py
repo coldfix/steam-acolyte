@@ -10,14 +10,8 @@ def create_login_dialog(steam, theme):
     layout = QVBoxLayout()
     window.setLayout(layout)
     window.setWindowTitle("Steam Acolyte")
-    users = steam.read_config('loginusers.vdf')['users']
-    users = sorted(
-        [SteamUser(steam_id,
-                   user_info['AccountName'],
-                   user_info['PersonaName'],
-                   user_info['Timestamp'])
-         for steam_id, user_info in users.items()],
-        key=lambda u: (u.persona_name.lower(), u.account_name.lower()))
+    users = sorted(steam.users(), key=lambda u:
+                   (u.persona_name.lower(), u.account_name.lower()))
     for user in users:
         layout.addWidget(UserWidget(window, theme, steam, user))
     layout.addWidget(

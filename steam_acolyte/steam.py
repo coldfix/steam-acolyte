@@ -38,6 +38,14 @@ class Steam:
         self.data = data or self.find_data()
         self.exe = exe or self.find_exe()
 
+    def users(self):
+        """Return a list of ``SteamUser``."""
+        users = self.read_config('loginusers.vdf')['users']
+        return [
+            SteamUser(uid, u['AccountName'], u['PersonaName'], u['Timestamp'])
+            for uid, u in users.items()
+        ]
+
     def store_login_cookie(self):
         username = self.get_last_user()
         userpath = os.path.join(self.root, 'acolyte', username, 'config.vdf')
