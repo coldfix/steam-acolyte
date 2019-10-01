@@ -76,9 +76,7 @@ class UserWidget(QFrame):
         steam = self.steam
         steam.login_window.close()
         steam.login_window = None
-        self.steam.switch_user(self.user.account_name)
-        self.steam.run()
-        self.steam.store_login_cookie()
+        steam.run_as(self.user.account_name)
         # Close and recreate after steam is finished. This serves two purposes:
         # 1. update user list and widget state
         # 2. fix ":hover" selector not working on linux after hide+show

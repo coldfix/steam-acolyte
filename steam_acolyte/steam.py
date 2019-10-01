@@ -2,7 +2,7 @@ import vdf
 
 import os
 import sys
-from shutil import copyfile
+from shutil import copyfile, move
 
 
 class SteamUser:
@@ -56,6 +56,7 @@ class Steam:
         if accounts.get(username):
             os.makedirs(os.path.dirname(userpath), exist_ok=True)
             copyfile(configpath, userpath)
+            return username
         else:
             print("Not replacing login data for logged out user: {!r}"
                   .format(username))
@@ -96,7 +97,7 @@ class Steam:
             print("No stored config found for {!r}".format(username),
                   file=sys.stderr)
             return False
-        copyfile(userpath, configpath)
+        move(userpath, configpath)
         return True
 
     def get_last_user(self):
@@ -129,6 +130,15 @@ class Steam:
         """Run steam."""
         import subprocess
         subprocess.call([self.exe, *args])
+
+    def run_as(self, username, args=()):
+        self.backup_last_login()
+        self.switch_user(username)
+        try:
+            self.run()
+        finally:
+            self.store_login_cookie()
+            self.restore_last_login()
 
     def read_config(self, filename='config.vdf'):
         """Read steam config.vdf file."""
@@ -179,6 +189,37 @@ class Steam:
             return read_steam_registry_value("SteamExe")
         else:
             return 'steam'
+
+    def backup_last_login(self):
+        configpath = os.path.join(self.root, 'config', 'config.vdf')
+        backuppath = os.path.join(self.root, 'acolyte', 'config.vdf')
+        backupuser = os.path.join(self.root, 'acolyte', 'AutoLoginUser')
+        if os.path.exists(configpath):
+            last_user = self.get_last_user() or ""
+            write_file(backupuser, last_user)
+            copyfile(configpath, backuppath)
+            self.disarm()
+
+    def restore_last_login(self):
+        configpath = os.path.join(self.root, 'config', 'config.vdf')
+        backuppath = os.path.join(self.root, 'acolyte', 'config.vdf')
+        backupuser = os.path.join(self.root, 'acolyte', 'AutoLoginUser')
+        if os.path.exists(backuppath):
+            last_user = read_file(backupuser).strip()
+            self.set_last_user(last_user)
+            move(backuppath, configpath)
+        else:
+            self.disarm()
+
+    def disarm(self):
+        """Remove login information from configfile at ``source`` path and
+        write to ``dest``."""
+        config = self.read_config('config.vdf')
+        steam = config['InstallConfigStore']['Software']['Valve']['Steam']
+        steam['Accounts'] = {name: {} for name in steam['Accounts']}
+        del steam['ConnectCache']
+        del steam['MTBF']
+        self.write_config('config.vdf', config)
 
 
 def read_steam_registry_value(value_name):
