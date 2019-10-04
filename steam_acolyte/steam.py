@@ -1,11 +1,13 @@
 from .util import read_file, write_file
 
+from PyQt5.QtCore import QObject, pyqtSignal
 import vdf
 
 import os
 import sys
+import shlex
 from shutil import copyfile
-from abc import abstractmethod, abstractclassmethod, ABCMeta
+from abc import abstractmethod, abstractclassmethod
 
 if sys.platform == 'win32':
     from .steam_win32 import SteamWin32 as SteamImpl
@@ -22,7 +24,7 @@ class SteamUser:
         self.timestamp = timestamp
 
 
-class SteamBase(metaclass=ABCMeta):
+class SteamBase:
 
     """This defines the methods that need to be provided by the platform
     specific implementations (SteamLinux/SteamWin32)."""
@@ -47,16 +49,75 @@ class SteamBase(metaclass=ABCMeta):
     def set_last_user(self, username):
         """Tell steam to login given user at next start."""
 
+    # IPC:
 
-class Steam(SteamImpl, SteamBase):
+    @abstractmethod
+    def _is_steam_pid_valid(self):
+        """Check if the saved steam PID file belongs to a running process."""
+
+    @abstractmethod
+    def _set_steam_pid(self):
+        """Save current process ID as the last steam PID."""
+
+    @abstractmethod
+    def _connect(self) -> bool:
+        """Connect to an already running steam instance. Returns true if
+        successful. Called after ``_is_steam_pid_valid()`` returned true."""
+
+    @abstractmethod
+    def _listen(self):
+        """Start listening to messages from other steam processes that want to
+        communicate their command line to us."""
+
+    @abstractmethod
+    def send(self, args: list):
+        """Send command line to connected steam instance. Only valid if
+        previously ``_connect()``-ed."""
+
+    @abstractmethod
+    def unlock(self):
+        """Close connection to other steam instance, or stop listening."""
+
+
+class Steam(SteamImpl, SteamBase, QObject):
 
     """This class allows various interactions with steam. Note that many of
     the methods are only safe to use while steam is not running."""
 
-    def __init__(self, root=None, exe=None, data=None):
+    command_received = pyqtSignal(str)
+
+    def __init__(self, root=None, exe=None, data=None, args=()):
+        super().__init__()
         self.root = root or self.find_root()
         self.data = data or self.find_data()
         self.exe = exe or self.find_exe()
+        self.command_received.connect(self._steam_cmdl_received)
+        self.args = args
+
+    def __del__(self):
+        self.unlock()
+
+    def lock(self, args):
+        """
+        Engage in steam's single instance locking mechanism.
+
+        This allows us to detect if steam is already running, and:
+
+        - if so: notify it to go the foreground or start a requested app
+        - if not: block it from running as long as we are active
+
+        This is important because many of our operations are only safe to
+        perform while steam is not running.
+        """
+        if self._is_steam_pid_valid() and self._connect():
+            self.send([self.exe, *args])
+            return False
+        self._set_steam_pid()
+        self._listen()
+        return True
+
+    def _steam_cmdl_received(self, line):
+        self.args = shlex.split(line.rstrip())[1:]
 
     def users(self):
         """Return a list of ``SteamUser``."""
@@ -119,10 +180,14 @@ class Steam(SteamImpl, SteamBase):
         copyfile(userpath, configpath)
         return True
 
-    def run(self, args=()):
+    def run(self):
         """Run steam."""
-        import subprocess
-        subprocess.call([self.exe, *args])
+        self.unlock()
+        try:
+            import subprocess
+            subprocess.call([self.exe, *self.args])
+        finally:
+            self.lock([])
 
     def read_config(self, filename='config.vdf'):
         """Read steam config.vdf file."""

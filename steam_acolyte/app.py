@@ -24,6 +24,7 @@ import sys
 
 
 def main(args=None):
+    app = QApplication([])
     opts = docopt(__doc__, args, version=__version__)
     try:
         steam = Steam(opts['--root'])
@@ -31,23 +32,30 @@ def main(args=None):
         print(e, file=sys.stderr)
         return 1
 
-    if opts['store']:
-        steam.store_login_cookie()
-    elif opts['switch']:
-        steam.switch_user(opts['<USER>'])
-    elif opts['start']:
-        steam.switch_user(opts['<USER>'])
-        steam.run()
-        steam.store_login_cookie()
-    else:
-        run_gui(steam, theme_name=opts['--theme'])
+    locked = steam.lock(['-foreground'])
+    try:
+        if not locked:
+            print("Steam is already running.")
+            return 1
+        if opts['store']:
+            steam.store_login_cookie()
+        elif opts['switch']:
+            steam.switch_user(opts['<USER>'])
+        elif opts['start']:
+            steam.switch_user(opts['<USER>'])
+            steam.run()
+            steam.store_login_cookie()
+        else:
+            create_gui(steam, theme_name=opts['--theme'])
+            return app.exec_()
+    finally:
+        steam.unlock()
 
 
-def run_gui(steam, theme_name):
+def create_gui(steam, theme_name):
     from steam_acolyte.window import create_login_dialog
     from steam_acolyte.theme import load_theme
     import signal
-    app = QApplication([])
     sys.excepthook = except_handler
     # Setup handling of KeyboardInterrupt (Ctrl-C) for PyQt:
     # By default Ctrl-C has no effect in PyQt. For more information, see:
@@ -59,7 +67,6 @@ def run_gui(steam, theme_name):
     theme = load_theme(steam, theme_name)
     steam.login_window = create_login_dialog(steam, theme)
     steam.login_window.show()
-    return app.exec_()
 
 
 def except_handler(*args, **kwargs):
