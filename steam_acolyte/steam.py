@@ -1,8 +1,16 @@
+from .util import read_file, write_file
+
 import vdf
 
 import os
 import sys
 from shutil import copyfile
+from abc import abstractmethod, abstractclassmethod, ABCMeta
+
+if sys.platform == 'win32':
+    from .steam_win32 import SteamWin32 as SteamImpl
+else:
+    from .steam_linux import SteamLinux as SteamImpl
 
 
 class SteamUser:
@@ -14,24 +22,36 @@ class SteamUser:
         self.timestamp = timestamp
 
 
-class Steam:
+class SteamBase(metaclass=ABCMeta):
 
-    # I tested this script on an ubuntu and archlinux machine, where I found
-    # the steam config and program files in different locations. In both cases
-    # there was also a path/symlink that pointed to the correct location, but
-    # since I don't know whether this is true for all distributions and steam
-    # versions, we go through all known prefixes anyway:
-    #
-    #             common name           ubuntu            archlinux
-    #   config    ~/.steam/steam@   ->  ~/.steam/steam    ~/.local/share/Steam
-    #   data      ~/.steam/root@    ->  ~/.steam          ~/.local/share/Steam
+    """This defines the methods that need to be provided by the platform
+    specific implementations (SteamLinux/SteamWin32)."""
 
-    STEAM_ROOT_PATH = [
-        '~/.local/share/Steam',
-        '~/.steam/steam',
-        '~/.steam/root',
-        '~/.steam',
-    ]
+    @abstractclassmethod
+    def find_root(cls):
+        """Locate and return the root path for the steam user config."""
+
+    @abstractclassmethod
+    def find_data(cls):
+        """Locate and return the root path for the steam program files."""
+
+    @abstractclassmethod
+    def find_exe(cls):
+        """Return name of the steam executable."""
+
+    @abstractmethod
+    def get_last_user(self):
+        """Return username which was last logged on."""
+
+    @abstractmethod
+    def set_last_user(self, username):
+        """Tell steam to login given user at next start."""
+
+
+class Steam(SteamImpl, SteamBase):
+
+    """This class allows various interactions with steam. Note that many of
+    the methods are only safe to use while steam is not running."""
 
     def __init__(self, root=None, exe=None, data=None):
         self.root = root or self.find_root()
@@ -99,32 +119,6 @@ class Steam:
         copyfile(userpath, configpath)
         return True
 
-    def get_last_user(self):
-        if sys.platform == 'win32':
-            return read_steam_registry_value("AutoLoginUser")
-        else:
-            reg_file = os.path.expanduser('~/.steam/registry.vdf')
-            reg_data = vdf.loads(read_file(reg_file))
-            steam_config = reg_data['Registry']['HKCU']['Software']['Valve']['Steam']
-            return steam_config['AutoLoginUser']
-
-    def set_last_user(self, username):
-        if sys.platform == 'win32':
-            import winreg as reg
-            with reg.CreateKey(
-                    reg.HKEY_CURRENT_USER, r"SOFTWARE\Valve\Steam") as key:
-                reg.SetValueEx(key, "AutoLoginUser", 0, reg.REG_SZ, username)
-                reg.SetValueEx(key, "RememberPassword", 0, reg.REG_DWORD, 1)
-        else:
-            reg_file = os.path.expanduser('~/.steam/registry.vdf')
-            reg_data = vdf.loads(read_file(reg_file))
-            steam_config = reg_data['Registry']['HKCU']['Software']['Valve']['Steam']
-            steam_config['AutoLoginUser'] = username
-            steam_config['RememberPassword'] = '1'
-            reg_data = vdf.dumps(reg_data, pretty=True)
-            with open(reg_file, 'wt') as f:
-                f.write(reg_data)
-
     def run(self, args=()):
         """Run steam."""
         import subprocess
@@ -140,61 +134,3 @@ class Steam:
         conf = os.path.join(self.root, 'config', filename)
         text = vdf.dumps(data, pretty=True)
         write_file(conf, text)
-
-    @classmethod
-    def find_root(cls):
-        """Locate and return the root path for the steam user config."""
-        if sys.platform == 'win32':
-            return read_steam_registry_value("SteamPath")
-        else:
-            # On arch and ubuntu, this is in '~/.steam/steam/', but as I'm not
-            # sure that's the case everywhere, we search through all known
-            # prefixes for good measure:
-            for root in cls.STEAM_ROOT_PATH:
-                root = os.path.expanduser(root)
-                conf = os.path.join(root, 'config', 'config.vdf')
-                if os.path.isdir(root) and os.path.isfile(conf):
-                    return root
-        raise RuntimeError("""Unable to find steam user path!""")
-
-    @classmethod
-    def find_data(cls):
-        """Locate and return the root path for the steam program files."""
-        if sys.platform == 'win32':
-            return read_steam_registry_value("SteamPath")
-        else:
-            # On arch and ubuntu, this is in '~/.steam/root/', but as I'm not
-            # sure that's the case everywhere, we search through all known
-            # prefixes for good measure:
-            for root in cls.STEAM_ROOT_PATH:
-                root = os.path.expanduser(root)
-                data = os.path.join(root, 'clientui', 'images', 'icons')
-                if os.path.isdir(root) and os.path.isdir(data):
-                    return root
-        raise RuntimeError("""Unable to find steam program data!""")
-
-    @classmethod
-    def find_exe(cls):
-        if sys.platform == 'win32':
-            return read_steam_registry_value("SteamExe")
-        else:
-            return 'steam'
-
-
-def read_steam_registry_value(value_name):
-    import winreg
-    with winreg.OpenKey(
-            winreg.HKEY_CURRENT_USER, r"SOFTWARE\Valve\Steam") as key:
-        return winreg.QueryValueEx(key, value_name)[0]
-
-
-def read_file(filename):
-    """Read full contents of given file."""
-    with open(filename) as f:
-        return f.read()
-
-
-def write_file(filename, text):
-    """Write file with the given text."""
-    with open(filename, 'wb') as f:
-        f.write(text.encode('utf-8'))
