@@ -28,6 +28,9 @@ class UserWidget(QFrame):
         self.theme = theme
         self.steam = steam
         self.user = user
+
+        steam.command_received.connect(self._present)
+
         self.setSizePolicy(QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed))
         layout = QHBoxLayout()
         labels = QVBoxLayout()
@@ -113,3 +116,6 @@ class UserWidget(QFrame):
             self.logout_action.setToolTip("Delete saved login")
         else:
             self.logout_action.setToolTip("")
+
+    def _present(self, *args):
+        self.activateWindow()
