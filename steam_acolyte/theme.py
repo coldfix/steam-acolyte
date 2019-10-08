@@ -23,9 +23,7 @@ def steam_theme(steam):
         window_style = read_text('steam_acolyte', 'window.css'),
         window_icon = load_icon_file(os.path.join(
             steam.data, 'public', 'steam_tray.ico')),
-        logout_icon = load_icon_file(os.path.join(
-            steam.data, 'clientui', 'images', 'icons',
-            'left.png')),
+        logout_icon = load_icon_resource('logout.svg'),
         delete_icon = load_icon_file(os.path.join(
             steam.data, 'clientui', 'images', 'icons',
             'stop_loading.png')),
