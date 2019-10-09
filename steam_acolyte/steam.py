@@ -1,4 +1,4 @@
-from .util import read_file, write_file
+from .util import read_file, write_file, subkey_lookup
 
 from PyQt5.QtCore import QObject, pyqtSignal
 import vdf
@@ -133,9 +133,9 @@ class Steam(SteamImpl, SteamBase, QObject):
         username = self.get_last_user()
         userpath = os.path.join(self.root, 'acolyte', username, 'config.vdf')
         configpath = os.path.join(self.root, 'config', 'config.vdf')
-        accounts = (
-            self.read_config('config.vdf')
-            ['InstallConfigStore']['Software']['Valve']['Steam']['Accounts'])
+        config = self.read_config('config.vdf')
+        accounts = subkey_lookup(
+            config, r'InstallConfigStore\Software\Valve\Steam\Accounts')
         if accounts.get(username):
             os.makedirs(os.path.dirname(userpath), exist_ok=True)
             copyfile(configpath, userpath)
@@ -159,8 +159,9 @@ class Steam(SteamImpl, SteamBase, QObject):
         self.write_config('loginusers.vdf', loginusers)
 
         config = self.read_config('config.vdf')
-        steam = config['InstallConfigStore']['Software']['Valve']['Steam']
-        steam['Accounts'].pop(username, None)
+        accounts = subkey_lookup(
+            config, r'InstallConfigStore\Software\Valve\Steam\Accounts')
+        accounts.pop(username, None)
         self.write_config('config.vdf', config)
 
     def has_cookie(self, username):

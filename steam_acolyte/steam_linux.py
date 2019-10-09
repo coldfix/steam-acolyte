@@ -1,4 +1,4 @@
-from .util import read_file, write_file, join_args
+from .util import read_file, write_file, join_args, subkey_lookup as lookup
 
 import vdf
 from PyQt5.QtCore import QThread, pyqtSignal
@@ -59,15 +59,13 @@ class SteamLinux:
     def get_last_user(self):
         reg_file = os.path.expanduser('~/.steam/registry.vdf')
         reg_data = vdf.loads(read_file(reg_file))
-        steam_config = \
-            reg_data['Registry']['HKCU']['Software']['Valve']['Steam']
-        return steam_config['AutoLoginUser']
+        steam_config = lookup(reg_data, r'Registry\HKCU\Software\Valve\Steam')
+        return steam_config.get('AutoLoginUser', '')
 
     def set_last_user(self, username):
         reg_file = os.path.expanduser('~/.steam/registry.vdf')
         reg_data = vdf.loads(read_file(reg_file))
-        steam_config = \
-            reg_data['Registry']['HKCU']['Software']['Valve']['Steam']
+        steam_config = lookup(reg_data, r'Registry\HKCU\Software\Valve\Steam')
         steam_config['AutoLoginUser'] = username
         steam_config['RememberPassword'] = '1'
         reg_data = vdf.dumps(reg_data, pretty=True)

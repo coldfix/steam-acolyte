@@ -33,3 +33,26 @@ def func_lookup(lib, types, declarations):
         func.argtypes = [getattr(types, t.strip())
                          for t in argtypes.split(',')]
     return funcs
+
+
+def subkey_lookup(d, path):
+    """Case-insensitive dictionary lookup that autovivifies non-existing
+    entries. `path` is a '\\' separated string.
+
+    Reasons to use this function to lookup entries in steam config:
+
+    - because I sometimes found lowercase keys in the `config.vdf` file
+    - for for some protection against exceptions due to missing keys
+    - more similar syntax compared to the windows registry lookup
+    - more concise syntax
+    """
+    for entry in path.split('\\'):
+        if entry in d:
+            d = d[entry]
+        else:
+            ld = {k.lower(): v for k, v in d.items()}
+            if entry.lower() in ld:
+                d = ld[entry]
+            else:
+                d = d[entry] = {}
+    return d
