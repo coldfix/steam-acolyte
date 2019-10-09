@@ -1,6 +1,18 @@
 CHANGES
 -------
 
+0.2.0
+~~~~~
+
+- add remove button that removes user from list
+- engage in steam's single instance locking mechanism:
+
+    - while running, block steam from being started
+    - avoid actions while steam is running
+
+  this prevents a common way of invalidating logins
+
+
 0.1.1
 ~~~~~
 
