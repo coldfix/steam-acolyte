@@ -7,7 +7,7 @@ import os
 import sys
 import shlex
 from shutil import copyfile
-from abc import abstractmethod, abstractclassmethod
+from abc import abstractmethod
 
 if sys.platform == 'win32':
     from .steam_win32 import SteamWin32 as SteamImpl
@@ -29,15 +29,15 @@ class SteamBase:
     """This defines the methods that need to be provided by the platform
     specific implementations (SteamLinux/SteamWin32)."""
 
-    @abstractclassmethod
+    @abstractmethod
     def find_root(cls):
         """Locate and return the root path for the steam user config."""
 
-    @abstractclassmethod
+    @abstractmethod
     def find_data(cls):
         """Locate and return the root path for the steam program files."""
 
-    @abstractclassmethod
+    @abstractmethod
     def find_exe(cls):
         """Return name of the steam executable."""
 
@@ -96,6 +96,8 @@ class Steam(SteamImpl, SteamBase, QObject):
 
     def __del__(self):
         self.unlock()
+        if hasattr(SteamImpl, '__del__'):
+            SteamImpl.__del__(self)
 
     def lock(self, args):
         """

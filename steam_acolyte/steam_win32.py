@@ -35,39 +35,42 @@ class SteamWin32:
     """Windows specific methods for the interaction with steam. This implements
     the SteamBase interface and is used as a mixin for Steam."""
 
-    REG_KEY = r'SOFTWARE\WOW6432Node\Valve\Steam'
+    USER_KEY = r"SOFTWARE\Valve\Steam"
+    IPC_KEY = r'SOFTWARE\WOW6432Node\Valve\Steam'
     EVENT_NAME = rb'Global\Valve_SteamIPC_Class'
     _event = None
 
-    @classmethod
-    def find_root(cls):
-        return read_steam_registry_value("SteamPath")
+    def __init__(self):
+        super().__init__()
+        self._user_key = reg.CreateKey(reg.HKEY_CURRENT_USER, self.USER_KEY)
+        self._ipc_key = reg.CreateKey(reg.HKEY_LOCAL_MACHINE, self.IPC_KEY)
 
-    @classmethod
-    def find_data(cls):
-        return read_steam_registry_value("SteamPath")
+    def __del__(self):
+        self._user_key.Close()
+        self._ipc_key.Close()
 
-    @classmethod
-    def find_exe(cls):
-        return read_steam_registry_value("SteamExe")
+    def find_root(self):
+        return reg.QueryValueEx(self._user_key, "SteamPath")[0]
+
+    def find_data(self):
+        return reg.QueryValueEx(self._user_key, "SteamPath")[0]
+
+    def find_exe(self):
+        return reg.QueryValueEx(self._user_key, "SteamExe")[0]
 
     def get_last_user(self):
-        return read_steam_registry_value("AutoLoginUser")
+        return reg.QueryValueEx(self._user_key, "AutoLoginUser")[0]
 
     def set_last_user(self, username):
-        with reg.CreateKey(
-                reg.HKEY_CURRENT_USER, r"SOFTWARE\Valve\Steam") as key:
-            reg.SetValueEx(key, "AutoLoginUser", 0, reg.REG_SZ, username)
-            reg.SetValueEx(key, "RememberPassword", 0, reg.REG_DWORD, 1)
+        reg.SetValueEx(self._user_key, "AutoLoginUser", 0, reg.REG_SZ, username)
+        reg.SetValueEx(self._user_key, "RememberPassword", 0, reg.REG_DWORD, 1)
 
     def _is_steam_pid_valid(self):
-        with reg.CreateKey(reg.HKEY_LOCAL_MACHINE, self.REG_KEY) as key:
-            pid = reg.QueryValueEx(key, 'SteamPID')[0]
-            return pid != 0 and IsProcessRunning(pid)
+        pid = reg.QueryValueEx(self._ipc_key, 'SteamPID')[0]
+        return pid != 0 and IsProcessRunning(pid)
 
     def _set_steam_pid(self):
-        with reg.CreateKey(reg.HKEY_LOCAL_MACHINE, self.REG_KEY) as key:
-            reg.SetValueEx(key, 'SteamPID', 0, reg.REG_DWORD, os.getpid())
+        reg.SetValueEx(self._ipc_key, 'SteamPID', 0, reg.REG_DWORD, os.getpid())
 
     def _connect(self):
         self._event = winapi.OpenEventA(
@@ -83,15 +86,13 @@ class SteamWin32:
         self._wait.activated.connect(self._fetch)
 
     def _fetch(self):
-        with reg.CreateKey(reg.HKEY_LOCAL_MACHINE, self.REG_KEY) as key:
-            cmdl = reg.QueryValueEx(key, 'TempAppCmdLine')[0]
-            reg.SetValueEx(key, 'TempAppCmdLine', 0, reg.REG_SZ, '')
+        cmdl = reg.QueryValueEx(self._ipc_key, 'TempAppCmdLine')[0]
+        reg.SetValueEx(self._ipc_key, 'TempAppCmdLine', 0, reg.REG_SZ, '')
         self.command_received.emit(cmdl)
 
     def send(self, args):
-        with reg.CreateKey(reg.HKEY_LOCAL_MACHINE, self.REG_KEY) as key:
-            cmdl = join_args(args)
-            reg.SetValueEx(key, 'TempAppCmdLine', 0, reg.REG_SZ, cmdl)
+        cmdl = join_args(args)
+        reg.SetValueEx(self._ipc_key, 'TempAppCmdLine', 0, reg.REG_SZ, cmdl)
         if not winapi.SetEvent(self._event):
             raise WinError()
 
@@ -99,11 +100,6 @@ class SteamWin32:
         if self._event:
             winapi.CloseHandle(self._event)
             self._event = None
-
-
-def read_steam_registry_value(value_name):
-    with reg.OpenKey(reg.HKEY_CURRENT_USER, r"SOFTWARE\Valve\Steam") as key:
-        return reg.QueryValueEx(key, value_name)[0]
 
 
 def IsProcessRunning(pid):
