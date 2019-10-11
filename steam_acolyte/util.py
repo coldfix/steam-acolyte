@@ -22,7 +22,7 @@ def join_args(args):
 def func_lookup(lib, types, declarations):
     funcs = {}
     funcdecl = re.compile(
-        r'^(\w+)\s+(\w+)\((\w+\s*(?:,\s*\w+\s*)*)\)$', re.ASCII)
+        r'^(\w+)\s+(\w+)\((\w+\s*(?:,\s*\w+\s*)*)?\)$', re.ASCII)
     for decl in declarations.split(';'):
         decl = decl.strip()
         if not decl:
