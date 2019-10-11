@@ -75,7 +75,7 @@ class SteamWin32:
 
     def _is_steam_pid_valid(self):
         pid = reg.QueryValueEx(self._ipc_key, 'SteamPID')[0]
-        return pid != 0 and IsProcessRunning(pid)
+        return pid != 0 and is_process_running(pid)
 
     def _set_steam_pid(self):
         reg.SetValueEx(self._ipc_key, 'SteamPID', 0, reg.REG_DWORD, os.getpid())
@@ -126,11 +126,11 @@ class SteamWin32:
         return wait_process(pid)
 
 
-def IsProcessRunning(pid):
+def is_process_running(pid):
     # Steam seems to use ProcessIdToSessionId to distinguish the case where the
     # other steam instance is running in the same user session, but I don't know
     # how it would handle this case, so let's just check if another steam
-    # process is running at all:.
+    # process is running at all:
     return wait_process(pid, 0)
 
 

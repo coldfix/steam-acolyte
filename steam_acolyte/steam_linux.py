@@ -135,6 +135,9 @@ class SteamLinux:
 
     def wait_for_steam_exit(self):
         """Wait until steam is closed."""
+        # Unfortunately, we have to poll here because we can't os.wait() for
+        # non-child processes, and the alternatives using the ptrace, inotifyd
+        # or netlink interfaces are much more involved.
         pid = self._read_steam_pid()
         while is_process_running(pid):
             sleep(0.010)
@@ -180,8 +183,8 @@ class FileReaderThread(QThread):
 
     def run(self):
         # `dup()`-ing the file descriptor serves two purposes here:
-        # - to leave the `self._fd` open when `f` reaches its end of life
-        # - to allow writing to `self._fd` without blocking from the main thread
+        # - leave the `self._fd` open when `f` reaches its end of life
+        # - allow writing to `self._fd` without blocking from the main thread
         with os.fdopen(os.dup(self._fd)) as f:
             for line in f:
                 line = line.rstrip('\n')
@@ -195,7 +198,8 @@ class FileReaderThread(QThread):
         # We have to wake up the reader thread by sending an empty line. I
         # first tried to close the file directly, but it turns out this blocks
         # the main thread and does not wake up the reader thread. Note that
-        # this operation would block if we did dup() the file descriptor:
+        # this operation would block if we hadn't dup()-ed the file descriptor
+        # for the reader thread:
         os.write(self._fd, b"\n")
         self.wait()
 
