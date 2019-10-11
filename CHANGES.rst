@@ -1,6 +1,12 @@
 CHANGES
 -------
 
+0.3.1
+~~~~~
+
+- fix broken usage of single-acolyte-instance-lock
+
+
 0.3.0
 ~~~~~
 
