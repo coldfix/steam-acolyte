@@ -31,15 +31,6 @@ class SteamLinux:
         return root
 
     @classmethod
-    def find_data(cls):
-        # I tested this on archlinux and ubuntu, not sure it works everywhere:
-        root = os.path.expanduser('~/.steam/root')
-        data = os.path.join(root, 'clientui', 'images', 'icons')
-        if not os.path.isdir(data):
-            raise RuntimeError("""Unable to find steam program data!""")
-        return root
-
-    @classmethod
     def find_exe(cls):
         return 'steam'
 

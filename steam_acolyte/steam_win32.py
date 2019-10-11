@@ -60,9 +60,6 @@ class SteamWin32:
     def find_root(self):
         return reg.QueryValueEx(self._user_key, "SteamPath")[0]
 
-    def find_data(self):
-        return reg.QueryValueEx(self._user_key, "SteamPath")[0]
-
     def find_exe(self):
         return reg.QueryValueEx(self._user_key, "SteamExe")[0]
 
