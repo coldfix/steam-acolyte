@@ -1,6 +1,19 @@
 CHANGES
 -------
 
+0.3.0
+~~~~~
+
+- learned to wait in the background for steam to exit when started after steam
+- add single instance for acolyte to lock to guard against multiple acolyte
+  instances waiting in the background at the same time
+- more user friendly program exit upon Ctrl+C without showing a traceback
+- add limited safeguards against exceptions due to missing keys in steam config
+- remove --theme command line argument
+- remove steam (original) theme
+- remove scanning for steam in so far unencountered locations on linux
+
+
 0.2.0
 ~~~~~
 
