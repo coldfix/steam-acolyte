@@ -48,6 +48,9 @@ def main(args=None):
         else:
             create_gui(steam, theme_name=opts['--theme'])
             return app.exec_()
+    except KeyboardInterrupt:
+        print()
+        return 1
     finally:
         steam.unlock()
 
