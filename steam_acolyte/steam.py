@@ -34,10 +34,6 @@ class SteamBase:
         """Locate and return the root path for the steam user config."""
 
     @abstractmethod
-    def find_data(cls):
-        """Locate and return the root path for the steam program files."""
-
-    @abstractmethod
     def find_exe(cls):
         """Return name of the steam executable."""
 
@@ -94,10 +90,9 @@ class Steam(SteamImpl, SteamBase, QObject):
 
     command_received = pyqtSignal(str)
 
-    def __init__(self, root=None, exe=None, data=None, args=()):
+    def __init__(self, root=None, exe=None, args=()):
         super().__init__()
         self.root = root or self.find_root()
-        self.data = data or self.find_data()
         self.exe = exe or self.find_exe()
         self.command_received.connect(self._steam_cmdl_received)
         self.args = args
