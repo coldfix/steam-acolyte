@@ -94,9 +94,6 @@ class SteamLinux:
         if self._pipe_fd != -1:
             os.close(self._pipe_fd)
             self._pipe_fd = -1
-        if self._lock_fd != -1:
-            os.close(self._lock_fd)
-            self._lock_fd = -1
 
     def ensure_single_acolyte_instance(self):
         """Ensure that we are the only acolyte instance. Return true if we are
@@ -108,6 +105,11 @@ class SteamLinux:
             return True
         except IOError:
             return False
+
+    def release_acolyte_instance_lock(self):
+        if self._lock_fd != -1:
+            os.close(self._lock_fd)
+            self._lock_fd = -1
 
     def wait_for_steam_exit(self):
         """Wait until steam is closed."""

@@ -105,9 +105,6 @@ class SteamWin32:
         if self._event:
             winapi.CloseHandle(self._event)
             self._event = None
-        if self._mutex:
-            winapi.CloseHandle(self._mutex)
-            self._mutex = None
 
     def ensure_single_acolyte_instance(self):
         """Ensure that we are the only acolyte instance."""
@@ -116,6 +113,11 @@ class SteamWin32:
         if self._mutex is None:
             raise WinError()
         return GetLastError() != ERROR_ALREADY_EXISTS
+
+    def release_acolyte_instance_lock(self):
+        if self._mutex:
+            winapi.CloseHandle(self._mutex)
+            self._mutex = None
 
     def wait_for_steam_exit(self):
         """Wait until steam is closed."""

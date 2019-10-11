@@ -79,6 +79,10 @@ class SteamBase:
         """Ensure that we are the only acolyte instance."""
 
     @abstractmethod
+    def release_acolyte_instance_lock(self):
+        """Allow other acolyte instances to run again."""
+
+    @abstractmethod
     def wait_for_steam_exit(self):
         """Wait until steam is closed."""
 

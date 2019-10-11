@@ -58,6 +58,7 @@ def main(args=None):
         return 1
     finally:
         steam.unlock()
+        steam.release_acolyte_instance_lock()
 
 
 def create_gui(steam):
