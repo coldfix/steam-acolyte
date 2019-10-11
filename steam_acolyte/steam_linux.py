@@ -15,44 +15,29 @@ class SteamLinux:
 
     # I tested this script on an ubuntu and archlinux machine, where I found
     # the steam config and program files in different locations. In both cases
-    # there was also a path/symlink that pointed to the correct location, but
-    # since I don't know whether this is true for all distributions and steam
-    # versions, we go through all known prefixes anyway:
+    # there was also a path/symlink that pointed to the correct location:
     #
     #             common name           ubuntu            archlinux
     #   config    ~/.steam/steam@   ->  ~/.steam/steam    ~/.local/share/Steam
     #   data      ~/.steam/root@    ->  ~/.steam          ~/.local/share/Steam
 
-    STEAM_ROOT_PATH = [
-        '~/.local/share/Steam',
-        '~/.steam/steam',
-        '~/.steam/root',
-        '~/.steam',
-    ]
-
     @classmethod
     def find_root(cls):
-        # On arch and ubuntu, this is in '~/.steam/steam/', but as I'm not
-        # sure that's the case everywhere, we search through all known
-        # prefixes for good measure:
-        for root in cls.STEAM_ROOT_PATH:
-            root = os.path.expanduser(root)
-            conf = os.path.join(root, 'config', 'config.vdf')
-            if os.path.isdir(root) and os.path.isfile(conf):
-                return root
-        raise RuntimeError("""Unable to find steam user path!""")
+        # I tested this on archlinux and ubuntu, not sure it works everywhere:
+        root = os.path.expanduser('~/.steam/steam')
+        conf = os.path.join(root, 'config', 'config.vdf')
+        if not os.path.isfile(conf):
+            raise RuntimeError("""Unable to find steam user path!""")
+        return root
 
     @classmethod
     def find_data(cls):
-        # On arch and ubuntu, this is in '~/.steam/root/', but as I'm not
-        # sure that's the case everywhere, we search through all known
-        # prefixes for good measure:
-        for root in cls.STEAM_ROOT_PATH:
-            root = os.path.expanduser(root)
-            data = os.path.join(root, 'clientui', 'images', 'icons')
-            if os.path.isdir(root) and os.path.isdir(data):
-                return root
-        raise RuntimeError("""Unable to find steam program data!""")
+        # I tested this on archlinux and ubuntu, not sure it works everywhere:
+        root = os.path.expanduser('~/.steam/root')
+        data = os.path.join(root, 'clientui', 'images', 'icons')
+        if not os.path.isdir(data):
+            raise RuntimeError("""Unable to find steam program data!""")
+        return root
 
     @classmethod
     def find_exe(cls):
