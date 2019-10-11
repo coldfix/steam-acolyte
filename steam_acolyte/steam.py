@@ -78,6 +78,14 @@ class SteamBase:
     def unlock(self):
         """Close connection to other steam instance, or stop listening."""
 
+    @abstractmethod
+    def ensure_single_acolyte_instance(self):
+        """Ensure that we are the only acolyte instance."""
+
+    @abstractmethod
+    def wait_for_steam_exit(self):
+        """Wait until steam is closed."""
+
 
 class Steam(SteamImpl, SteamBase, QObject):
 
@@ -99,7 +107,7 @@ class Steam(SteamImpl, SteamBase, QObject):
         if hasattr(SteamImpl, '__del__'):
             SteamImpl.__del__(self)
 
-    def lock(self, args):
+    def lock(self, args=None):
         """
         Engage in steam's single instance locking mechanism.
 
@@ -112,7 +120,8 @@ class Steam(SteamImpl, SteamBase, QObject):
         perform while steam is not running.
         """
         if self._is_steam_pid_valid() and self._connect():
-            self.send([self.exe, *args])
+            if args is not None:
+                self.send([self.exe, *args])
             return False
         self._set_steam_pid()
         self._listen()

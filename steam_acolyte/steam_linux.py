@@ -3,7 +3,9 @@ from .util import read_file, write_file, join_args, subkey_lookup as lookup
 import vdf
 from PyQt5.QtCore import QThread, pyqtSignal
 
+import fcntl
 import os
+from time import sleep
 
 
 class SteamLinux:
@@ -77,16 +79,14 @@ class SteamLinux:
 
     def _is_steam_pid_valid(self):
         """Check if the steam.pid file designates a running process."""
+        return is_process_running(self._read_steam_pid())
+
+    def _read_steam_pid(self):
         pidfile = os.path.expanduser(self.PID_FILE)
         pidtext = read_file(pidfile)
         if not pidtext:
             return False
-        pid = int(pidtext)
-        try:
-            os.kill(pid, 0)
-            return True
-        except OSError:
-            return False
+        return int(pidtext)
 
     def _set_steam_pid(self):
         pidfile = os.path.expanduser(self.PID_FILE)
@@ -118,6 +118,26 @@ class SteamLinux:
         if self._pipe_fd != -1:
             os.close(self._pipe_fd)
             self._pipe_fd = -1
+        if self._lock_fd != -1:
+            os.close(self._lock_fd)
+            self._lock_fd = -1
+
+    def ensure_single_acolyte_instance(self):
+        """Ensure that we are the only acolyte instance. Return true if we are
+        the first instance, false if another acolyte instance is running."""
+        pid_file = os.path.join(self.root, 'acolyte', 'acolyte.lock')
+        self._lock_fd = os.open(pid_file, os.O_WRONLY | os.O_CREAT, 0o644)
+        try:
+            fcntl.lockf(self._lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return True
+        except IOError:
+            return False
+
+    def wait_for_steam_exit(self):
+        """Wait until steam is closed."""
+        pid = self._read_steam_pid()
+        while is_process_running(pid):
+            sleep(0.010)
 
     def _open_pipe_for_writing(self, name):
         """Open steam.pipe as a writer (client)."""
@@ -178,3 +198,11 @@ class FileReaderThread(QThread):
         # this operation would block if we did dup() the file descriptor:
         os.write(self._fd, b"\n")
         self.wait()
+
+
+def is_process_running(pid):
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False

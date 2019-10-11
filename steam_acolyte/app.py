@@ -34,9 +34,15 @@ def main(args=None):
 
     locked = steam.lock(['-foreground'])
     try:
+        if not steam.ensure_single_acolyte_instance():
+            print("Acolyte is already running. Terminating.")
+            return 0
         if not locked:
-            print("Steam is already running.")
-            return 1
+            print("Waiting for steam to exit.")
+            steam.unlock()
+            while not steam.lock():
+                steam.unlock()
+                steam.wait_for_steam_exit()
         if opts['store']:
             steam.store_login_cookie()
         elif opts['switch']:

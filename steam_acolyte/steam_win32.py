@@ -2,11 +2,17 @@ from .util import join_args, func_lookup
 
 from PyQt5.QtCore import QWinEventNotifier
 
-from ctypes import wintypes, windll, WinError
+from ctypes import wintypes, windll, WinError, GetLastError
 import os
 from types import SimpleNamespace
 import winreg as reg
 
+# Basic constants:
+INFINITE           = 0xFFFFFFFF
+
+# Error codes:
+# https://docs.microsoft.com/en-us/windows/win32/debug/system-error-codes--0-499-
+ERROR_ALREADY_EXISTS = 183
 
 # Synchronization Object Security and Access Rights:
 # https://docs.microsoft.com/en-us/windows/win32/sync/synchronization-object-security-and-access-rights
@@ -23,6 +29,7 @@ winapi = SimpleNamespace(**func_lookup(windll.kernel32, wintypes, """
     HANDLE CreateEventA(LPCVOID, BOOL, BOOL, LPCSTR);
     HANDLE OpenEventA(DWORD, BOOL, LPCSTR);
     BOOL SetEvent(BOOL);
+    HANDLE CreateMutexA(LPCVOID, BOOL, LPCSTR);
 
     DWORD WaitForSingleObject(HANDLE, DWORD);
 
@@ -39,6 +46,7 @@ class SteamWin32:
     IPC_KEY = r'SOFTWARE\WOW6432Node\Valve\Steam'
     EVENT_NAME = rb'Global\Valve_SteamIPC_Class'
     _event = None
+    _mutex = None
 
     def __init__(self):
         super().__init__()
@@ -100,6 +108,22 @@ class SteamWin32:
         if self._event:
             winapi.CloseHandle(self._event)
             self._event = None
+        if self._mutex:
+            winapi.CloseHandle(self._mutex)
+            self._mutex = None
+
+    def ensure_single_acolyte_instance(self):
+        """Ensure that we are the only acolyte instance."""
+        name = b'acolyte-instance-lock-{4F0BE4F0-52F2-4A7F-BEAB-D02807303CBF}'
+        self._mutex = winapi.CreateMutexA(None, False, name)
+        if self._mutex is None:
+            raise WinError()
+        return GetLastError() != ERROR_ALREADY_EXISTS
+
+    def wait_for_steam_exit(self):
+        """Wait until steam is closed."""
+        pid = reg.QueryValueEx(self._ipc_key, 'SteamPID')[0]
+        return wait_process(pid)
 
 
 def IsProcessRunning(pid):
@@ -107,6 +131,10 @@ def IsProcessRunning(pid):
     # other steam instance is running in the same user session, but I don't know
     # how it would handle this case, so let's just check if another steam
     # process is running at all:.
+    return wait_process(pid, 0)
+
+
+def wait_process(pid, timeout=INFINITE):
     handle = winapi.OpenProcess(SYNCHRONIZE, False, pid)
     if not handle:
         return False
