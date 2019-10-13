@@ -31,9 +31,9 @@ def main(args=None):
         print(e, file=sys.stderr)
         return 1
 
-    locked = steam.lock(['-foreground'])
+    first, locked = steam.lock(['-foreground'])
     try:
-        if not steam.ensure_single_acolyte_instance():
+        if not first:
             print("Acolyte is already running. Terminating.")
             return 0
         if not locked:
