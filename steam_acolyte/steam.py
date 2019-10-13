@@ -66,7 +66,7 @@ class SteamBase:
         communicate their command line to us."""
 
     @abstractmethod
-    def send(self, args: list):
+    def _send(self, args: list):
         """Send command line to connected steam instance. Only valid if
         previously ``_connect()``-ed."""
 
@@ -120,7 +120,7 @@ class Steam(SteamImpl, SteamBase, QObject):
         """
         if self._is_steam_pid_valid() and self._connect():
             if args is not None:
-                self.send([self.exe, *args])
+                self._send([self.exe, *args])
             return False
         self._set_steam_pid()
         self._listen()
