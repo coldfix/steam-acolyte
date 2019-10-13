@@ -124,7 +124,10 @@ class SteamLinux:
         """Open steam.pipe as a writer (client)."""
         mode = os.O_WRONLY | os.O_NONBLOCK
         path = os.path.expanduser(name)
-        return os.open(path, mode)
+        try:
+            return os.open(path, mode)
+        except OSError:
+            return -1
 
     def _open_pipe_for_reading(self, name):
         """Open steam.pipe as a reader (server)."""
