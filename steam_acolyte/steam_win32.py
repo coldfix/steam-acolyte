@@ -95,7 +95,7 @@ class SteamWin32:
         reg.SetValueEx(self._ipc_key, 'TempAppCmdLine', 0, reg.REG_SZ, '')
         self.command_received.emit(cmdl)
 
-    def send(self, args):
+    def _send(self, args):
         cmdl = join_args(args)
         reg.SetValueEx(self._ipc_key, 'TempAppCmdLine', 0, reg.REG_SZ, cmdl)
         if not winapi.SetEvent(self._event):

@@ -83,7 +83,7 @@ class SteamLinux:
         self._thread.start()
         return True
 
-    def send(self, args):
+    def _send(self, args):
         text = join_args(args) + '\n'
         os.write(self._pipe_fd, text.encode('utf-8'))
 

@@ -66,7 +66,7 @@ class SteamBase:
         communicate their command line to us."""
 
     @abstractmethod
-    def send(self, args: list):
+    def _send(self, args: list):
         """Send command line to connected steam instance. Only valid if
         previously ``_connect()``-ed."""
 
@@ -117,14 +117,28 @@ class Steam(SteamImpl, SteamBase, QObject):
 
         This is important because many of our operations are only safe to
         perform while steam is not running.
+
+        Note that we also have an acolyte-specific instance lock that is
+        devised to keep multiple instances from waiting in the background and
+        successively opening windows after the previous one was closed. Only
+        the first instance is allowed to acquire the steam lock and therefore
+        perform operations or show a GUI.
         """
-        if self._is_steam_pid_valid() and self._connect():
-            if args is not None:
-                self.send([self.exe, *args])
-            return False
-        self._set_steam_pid()
-        self._listen()
-        return True
+        # The loop is needed to deal with the race condition due a second
+        # acolyte instance being scheduled after the first one acquires the
+        # lock, but before it starts to listen, and therefore fails to connect
+        # to the steam IPC:
+        while True:
+            first = self.ensure_single_acolyte_instance()
+            if self._is_steam_pid_valid() and self._connect():
+                if args is not None:
+                    self._send([self.exe, *args])
+                return (first, False)
+            if first:
+                self._set_steam_pid()
+                self._listen()
+                return (True, True)
+            os.sched_yield()
 
     def _steam_cmdl_received(self, line):
         self.args = shlex.split(line.rstrip())[1:]
