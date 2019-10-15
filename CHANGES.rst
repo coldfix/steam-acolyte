@@ -1,6 +1,16 @@
 CHANGES
 -------
 
+0.3.2
+~~~~~
+
+- fix OSError on startup if a process with the given PID exists but the pipe
+  is not currently writable (linux)
+- address an unlikely race condition during program startup
+- call activateWindow only a single time on the first acolyte window, when a
+  second steam/acolyte is started
+
+
 0.3.1
 ~~~~~
 
