@@ -18,6 +18,7 @@ def create_login_dialog(steam, theme):
         UserWidget(window, theme, steam, SteamUser('', '', '', '')))
     window.setWindowIcon(theme.window_icon)
     window.setStyleSheet(theme.window_style)
+    steam.command_received.connect(lambda *_: window.activateWindow())
     return window
 
 
@@ -28,8 +29,6 @@ class UserWidget(QFrame):
         self.theme = theme
         self.steam = steam
         self.user = user
-
-        steam.command_received.connect(self._present)
 
         self.setSizePolicy(QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed))
         layout = QHBoxLayout()
@@ -116,6 +115,3 @@ class UserWidget(QFrame):
             self.logout_action.setToolTip("Delete saved login")
         else:
             self.logout_action.setToolTip("")
-
-    def _present(self, *args):
-        self.activateWindow()
