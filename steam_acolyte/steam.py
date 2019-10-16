@@ -1,6 +1,6 @@
 from .util import read_file, write_file, subkey_lookup
 
-from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtCore import QObject, pyqtSignal, QProcess
 import vdf
 
 import os
@@ -107,6 +107,14 @@ class Steam(SteamImpl, SteamBase, QObject):
         if hasattr(SteamImpl, '__del__'):
             SteamImpl.__del__(self)
 
+    def wait_for_lock(self):
+        """Wait until steam has exited, and lock can be acquired. May be
+        called only if we are the first acolyte instance."""
+        self.unlock()
+        while not self.lock()[1]:
+            self.unlock()
+            self.wait_for_steam_exit()
+
     def lock(self, args=None):
         """
         Engage in steam's single instance locking mechanism.
@@ -208,12 +216,11 @@ class Steam(SteamImpl, SteamBase, QObject):
 
     def run(self):
         """Run steam."""
-        self.unlock()
-        try:
-            import subprocess
-            subprocess.call([self.exe, *self.args])
-        finally:
-            self.lock([])
+        process = self._process = QProcess()
+        process.setInputChannelMode(QProcess.ForwardedInputChannel)
+        process.setProcessChannelMode(QProcess.ForwardedChannels)
+        process.start(self.exe, self.args)
+        return process
 
     def read_config(self, filename='config.vdf'):
         """Read steam config.vdf file."""

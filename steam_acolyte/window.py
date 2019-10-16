@@ -1,12 +1,88 @@
 from steam_acolyte.steam import SteamUser
+from steam_acolyte.async_ import AsyncTask
 
+from PyQt5.QtCore import QObject
 from PyQt5.QtWidgets import (
     QDialog, QLabel, QToolButton, QAbstractButton,
     QAction, QHBoxLayout, QVBoxLayout, QSizePolicy,
-    QStyle, QStyleOption, QStylePainter)
+    QStyle, QStyleOption, QStylePainter,
+    QSystemTrayIcon, QMenu)
 
 
-def create_login_dialog(steam, theme):
+class AcolyteGUI(QObject):
+
+    def __init__(self, app, steam, theme):
+        super().__init__()
+        self.app = app
+        self.steam = steam
+        self.theme = theme
+        self.trayicon = None
+        self.window = None
+        self.wait_task = None
+        self.process = None
+        steam.command_received.connect(self._present)
+
+    def wait_for_lock(self):
+        self.wait_task = AsyncTask(self.steam.wait_for_lock)
+        self.wait_task.finished.connect(self._on_locked)
+        self.wait_task.start()
+
+    def _on_locked(self):
+        self.wait_task = None
+        self.steam.store_login_cookie()
+        self.show_window()
+
+    def show_trayicon(self):
+        self.trayicon = QSystemTrayIcon(self.theme.window_icon)
+        self.trayicon.setVisible(True)
+        self.trayicon.setToolTip(
+            "acolyte - lightweight steam account manager")
+        self.trayicon.activated.connect(self.trayicon_clicked)
+        self.trayicon.setContextMenu(self.createMenu())
+
+    def show_window(self):
+        self.window = create_login_dialog(self)
+        self.window.rejected.connect(self.app.quit)
+        self.window.show()
+
+    def trayicon_clicked(self, reason):
+        if reason == QSystemTrayIcon.Trigger:
+            self._present()
+
+    def createMenu(self):
+        style = self.app.style()
+        exit = QAction('&Quit', self)
+        exit.setToolTip('Exit acolyte.')
+        exit.setIcon(style.standardIcon(QStyle.SP_DialogCloseButton))
+        exit.triggered.connect(self.app.quit)
+        menu = QMenu()
+        menu.addAction(exit)
+        return menu
+
+    def run_steam(self, username):
+        # Close and recreate after steam is finished. This serves two purposes:
+        # 1. update user list and widget state
+        # 2. fix ":hover" selector not working on linux after hide+show
+        self.window.rejected.disconnect(self.app.quit)
+        self.window.close()
+        self.window = None
+        self.steam.switch_user(username)
+        self.steam.unlock()
+        self.process = self.steam.run()
+        self.process.finished.connect(self.wait_for_lock)
+
+    def _present(self):
+        if self.window:
+            self.window.activateWindow()
+
+    def show_waiting_message(self):
+        self.trayicon.showMessage(
+            "steam-acolyte", "The damned stand ready.")
+
+
+def create_login_dialog(acolyte):
+    steam = acolyte.steam
+    theme = acolyte.theme
     window = QDialog()
     layout = QVBoxLayout()
     window.setLayout(layout)
@@ -15,10 +91,9 @@ def create_login_dialog(steam, theme):
                    (u.persona_name.lower(), u.account_name.lower()))
     users.append(SteamUser('', '', '', ''))
     for user in users:
-        layout.addWidget(UserWidget(theme, steam, user))
+        layout.addWidget(UserWidget(acolyte, user))
     window.setWindowIcon(theme.window_icon)
     window.setStyleSheet(theme.window_style)
-    steam.command_received.connect(lambda *_: window.activateWindow())
     return window
 
 
@@ -40,16 +115,18 @@ class ButtonWidget(QAbstractButton):
 
 class UserWidget(ButtonWidget):
 
-    def __init__(self, theme, steam, user):
+    def __init__(self, acolyte, user):
         super().__init__()
-        self.theme = theme
-        self.steam = steam
+        self.acolyte = acolyte
+        self.steam = acolyte.steam
+        self.theme = acolyte.theme
         self.user = user
 
         self.setSizePolicy(QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed))
         layout = QHBoxLayout()
         labels = QVBoxLayout()
 
+        theme = self.theme
         ico_label = QLabel()
         icon = theme.user_icon if user.account_name else theme.plus_icon
         if icon:
@@ -92,17 +169,7 @@ class UserWidget(ButtonWidget):
         self.update_ui()
 
     def login_clicked(self):
-        steam = self.steam
-        steam.login_window.close()
-        steam.login_window = None
-        steam.switch_user(self.user.account_name)
-        steam.run()
-        steam.store_login_cookie()
-        # Close and recreate after steam is finished. This serves two purposes:
-        # 1. update user list and widget state
-        # 2. fix ":hover" selector not working on linux after hide+show
-        steam.login_window = create_login_dialog(steam, self.theme)
-        steam.login_window.show()
+        self.acolyte.run_steam(self.user.account_name)
 
     def logout_clicked(self):
         self.steam.remove_login_cookie(self.user.account_name)
