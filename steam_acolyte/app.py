@@ -60,6 +60,7 @@ def main(args=None):
             gui = AcolyteGUI(app, steam, load_theme())
             gui.show_trayicon()
             if locked:
+                steam.store_login_cookie()
                 gui.show_window()
             else:
                 print("Waiting for steam to exit.")
