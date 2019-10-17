@@ -1,3 +1,7 @@
+* {
+    color: #DDDDDD;
+}
+
 QDialog {
     background: qlineargradient(
         x1: 0, y1: 0,
@@ -5,10 +9,9 @@ QDialog {
         stop: 0 #1B2137,
         stop: 1 #2A2E33
     );
-    color: #DDDDDD;
 }
 
-QFrame {
+UserWidget {
     background: qlineargradient(
         x1: 0, y1: 0,
         x2: 0, y2: 1,
@@ -20,10 +23,9 @@ QFrame {
     border-width: 1px;
     border-radius: 10px;
     border-color: #AAAAAA;
-    color: #DDDDDD;
 }
 
-QFrame:hover {
+UserWidget:hover {
     background: qlineargradient(
         x1: 0, y1: 0,
         x2: 0, y2: 1,
@@ -34,15 +36,6 @@ QFrame:hover {
 
 QLabel#PersonaName {
     color: white;
-}
-
-QLabel {
-    background: transparent;
-    border: none;
-}
-QLabel:hover {
-    background: transparent;
-    border: none;
 }
 
 QToolButton {
