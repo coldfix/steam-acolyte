@@ -13,10 +13,9 @@ def create_login_dialog(steam, theme):
     window.setWindowTitle("Steam Acolyte")
     users = sorted(steam.users(), key=lambda u:
                    (u.persona_name.lower(), u.account_name.lower()))
+    users.append(SteamUser('', '', '', ''))
     for user in users:
-        layout.addWidget(UserWidget(window, theme, steam, user))
-    layout.addWidget(
-        UserWidget(window, theme, steam, SteamUser('', '', '', '')))
+        layout.addWidget(UserWidget(theme, steam, user))
     window.setWindowIcon(theme.window_icon)
     window.setStyleSheet(theme.window_style)
     steam.command_received.connect(lambda *_: window.activateWindow())
@@ -41,8 +40,8 @@ class ButtonWidget(QAbstractButton):
 
 class UserWidget(ButtonWidget):
 
-    def __init__(self, parent, theme, steam, user):
-        super().__init__(parent)
+    def __init__(self, theme, steam, user):
+        super().__init__()
         self.theme = theme
         self.steam = steam
         self.user = user
@@ -70,6 +69,8 @@ class UserWidget(ButtonWidget):
         labels.addWidget(bot_label)
         self.logout_action = QAction()
         self.logout_action.triggered.connect(self.logout_clicked)
+        self.logout_action.setIcon(self.theme.logout_icon)
+        self.logout_action.setToolTip("Delete saved login")
         self.delete_action = QAction()
         self.delete_action.triggered.connect(self.delete_clicked)
         self.delete_action.setIcon(theme.delete_icon)
@@ -113,18 +114,6 @@ class UserWidget(ButtonWidget):
         self.window().adjustSize()
 
     def update_ui(self):
-        enabled = self.steam.has_cookie(self.user.account_name)
-        self.logout_button.setVisible(enabled)
-        self.logout_action.setEnabled(enabled)
-        self.delete_action.setEnabled(bool(self.user.account_name))
-        self.delete_button.setVisible(bool(self.user.account_name))
-
-        if enabled:
-            self.logout_action.setIcon(
-                self.theme.logout_icon or
-                self.style().standardIcon(QStyle.SP_ArrowLeft))
-
-        if enabled:
-            self.logout_action.setToolTip("Delete saved login")
-        else:
-            self.logout_action.setToolTip("")
+        username = self.user.account_name
+        self.logout_button.setVisible(self.steam.has_cookie(username))
+        self.delete_button.setVisible(bool(username))
