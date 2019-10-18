@@ -13,9 +13,9 @@ def create_login_dialog(steam, theme):
     users = sorted(steam.users(), key=lambda u:
                    (u.persona_name.lower(), u.account_name.lower()))
     for user in users:
-        layout.addWidget(UserWidget(window, theme, steam, user))
+        layout.addWidget(UserWidget(theme, steam, user))
     layout.addWidget(
-        UserWidget(window, theme, steam, SteamUser('', '', '', '')))
+        UserWidget(theme, steam, SteamUser('', '', '', '')))
     window.setWindowIcon(theme.window_icon)
     window.setStyleSheet(theme.window_style)
     steam.command_received.connect(lambda *_: window.activateWindow())
@@ -24,8 +24,8 @@ def create_login_dialog(steam, theme):
 
 class UserWidget(QFrame):
 
-    def __init__(self, parent, theme, steam, user):
-        super().__init__(parent)
+    def __init__(self, theme, steam, user):
+        super().__init__()
         self.theme = theme
         self.steam = steam
         self.user = user
