@@ -1,6 +1,13 @@
 CHANGES
 -------
 
+0.3.5
+~~~~~
+
+- fix deadlock on windows after running steam
+- fix file descriptor leakage on linux after running steam
+
+
 0.3.4
 ~~~~~
 
