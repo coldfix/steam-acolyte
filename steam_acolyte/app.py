@@ -24,7 +24,6 @@ import sys
 
 def main(args=None):
     app = QApplication([])
-    app.setQuitOnLastWindowClosed(False)
     opts = docopt(__doc__, args, version=__version__)
     try:
         steam = Steam(opts['--root'])
@@ -54,18 +53,18 @@ def main(args=None):
                 steam.lock()
                 steam.store_login_cookie()
         else:
-            from steam_acolyte.window import AcolyteGUI
+            from steam_acolyte.window import LoginDialog
             from steam_acolyte.theme import load_theme
             init_app()
-            gui = AcolyteGUI(app, steam, load_theme())
-            gui.show_trayicon()
+            window = LoginDialog(steam, load_theme())
+            window.show_trayicon()
             if locked:
                 steam.store_login_cookie()
-                gui.show_window()
+                window.show()
             else:
                 print("Waiting for steam to exit.")
-                gui.show_waiting_message()
-                gui.wait_for_lock()
+                window.show_waiting_message()
+                window.wait_for_lock()
             return app.exec_()
     except KeyboardInterrupt:
         print()

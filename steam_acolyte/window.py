@@ -1,7 +1,6 @@
 from steam_acolyte.steam import SteamUser
 from steam_acolyte.async_ import AsyncTask
 
-from PyQt5.QtCore import QObject
 from PyQt5.QtWidgets import (
     QDialog, QLabel, QToolButton, QAbstractButton,
     QAction, QHBoxLayout, QVBoxLayout, QSizePolicy,
@@ -9,18 +8,38 @@ from PyQt5.QtWidgets import (
     QSystemTrayIcon, QMenu)
 
 
-class AcolyteGUI(QObject):
+class LoginDialog(QDialog):
 
-    def __init__(self, app, steam, theme):
+    def __init__(self, steam, theme):
         super().__init__()
-        self.app = app
         self.steam = steam
         self.theme = theme
         self.trayicon = None
-        self.window = None
         self.wait_task = None
         self.process = None
-        steam.command_received.connect(self._present)
+        self.user_widgets = []
+        self.setLayout(QVBoxLayout())
+        self.setWindowTitle("Steam Acolyte")
+        self.setWindowIcon(theme.window_icon)
+        self.setStyleSheet(theme.window_style)
+        steam.command_received.connect(lambda *_: self.activateWindow())
+        self.update_userlist()
+
+    def update_userlist(self):
+        self.clear_layout()
+        users = sorted(self.steam.users(), key=lambda u:
+                       (u.persona_name.lower(), u.account_name.lower()))
+        users.append(SteamUser('', '', '', ''))
+        for user in users:
+            self.layout().addWidget(UserWidget(self, user))
+
+    def clear_layout(self):
+        layout = self.layout()
+        while layout.count():
+            item = layout.takeAt(0)
+            if item.widget():
+                item.widget().hide()
+                item.widget().deleteLater()
 
     def wait_for_lock(self):
         self.wait_task = AsyncTask(self.steam.wait_for_lock)
@@ -30,7 +49,8 @@ class AcolyteGUI(QObject):
     def _on_locked(self):
         self.wait_task = None
         self.steam.store_login_cookie()
-        self.show_window()
+        self.update_userlist()
+        self.show()
 
     def show_trayicon(self):
         self.trayicon = QSystemTrayIcon(self.theme.window_icon)
@@ -40,21 +60,17 @@ class AcolyteGUI(QObject):
         self.trayicon.activated.connect(self.trayicon_clicked)
         self.trayicon.setContextMenu(self.createMenu())
 
-    def show_window(self):
-        self.window = create_login_dialog(self)
-        self.window.rejected.connect(self.app.quit)
-        self.window.show()
-
     def trayicon_clicked(self, reason):
         if reason == QSystemTrayIcon.Trigger:
-            self._present()
+            if self.isVisible():
+                self.activateWindow()
 
     def createMenu(self):
-        style = self.app.style()
+        style = self.style()
         exit = QAction('&Quit', self)
         exit.setToolTip('Exit acolyte.')
         exit.setIcon(style.standardIcon(QStyle.SP_DialogCloseButton))
-        exit.triggered.connect(self.app.quit)
+        exit.triggered.connect(self.close)
         menu = QMenu()
         menu.addAction(exit)
         return menu
@@ -63,38 +79,15 @@ class AcolyteGUI(QObject):
         # Close and recreate after steam is finished. This serves two purposes:
         # 1. update user list and widget state
         # 2. fix ":hover" selector not working on linux after hide+show
-        self.window.rejected.disconnect(self.app.quit)
-        self.window.close()
-        self.window = None
+        self.hide()
         self.steam.switch_user(username)
         self.steam.unlock()
         self.process = self.steam.run()
         self.process.finished.connect(self.wait_for_lock)
 
-    def _present(self):
-        if self.window:
-            self.window.activateWindow()
-
     def show_waiting_message(self):
         self.trayicon.showMessage(
             "steam-acolyte", "The damned stand ready.")
-
-
-def create_login_dialog(acolyte):
-    steam = acolyte.steam
-    theme = acolyte.theme
-    window = QDialog()
-    layout = QVBoxLayout()
-    window.setLayout(layout)
-    window.setWindowTitle("Steam Acolyte")
-    users = sorted(steam.users(), key=lambda u:
-                   (u.persona_name.lower(), u.account_name.lower()))
-    users.append(SteamUser('', '', '', ''))
-    for user in users:
-        layout.addWidget(UserWidget(acolyte, user))
-    window.setWindowIcon(theme.window_icon)
-    window.setStyleSheet(theme.window_style)
-    return window
 
 
 class ButtonWidget(QAbstractButton):
@@ -115,11 +108,10 @@ class ButtonWidget(QAbstractButton):
 
 class UserWidget(ButtonWidget):
 
-    def __init__(self, acolyte, user):
-        super().__init__()
-        self.acolyte = acolyte
-        self.steam = acolyte.steam
-        self.theme = acolyte.theme
+    def __init__(self, window, user):
+        super().__init__(window)
+        self.steam = window.steam
+        self.theme = window.theme
         self.user = user
 
         self.setSizePolicy(QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed))
@@ -169,7 +161,7 @@ class UserWidget(ButtonWidget):
         self.update_ui()
 
     def login_clicked(self):
-        self.acolyte.run_steam(self.user.account_name)
+        self.window().run_steam(self.user.account_name)
 
     def logout_clicked(self):
         self.steam.remove_login_cookie(self.user.account_name)
