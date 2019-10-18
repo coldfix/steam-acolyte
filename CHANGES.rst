@@ -1,6 +1,13 @@
 CHANGES
 -------
 
+0.3.4
+~~~~~
+
+- fix AttributeError due to missing os.sched_yield on windows
+  (actually merge the fix intended for the previous release this time;)
+
+
 0.3.3
 ~~~~~
 
