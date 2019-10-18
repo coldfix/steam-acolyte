@@ -1,8 +1,9 @@
 from steam_acolyte.steam import SteamUser
 
 from PyQt5.QtWidgets import (
-    QDialog, QFrame, QLabel, QAction, QStyle,
-    QHBoxLayout, QVBoxLayout, QToolButton, QSizePolicy)
+    QDialog, QLabel, QToolButton, QAbstractButton,
+    QAction, QHBoxLayout, QVBoxLayout, QSizePolicy,
+    QStyle, QStyleOption, QStylePainter)
 
 
 def create_login_dialog(steam, theme):
@@ -22,7 +23,23 @@ def create_login_dialog(steam, theme):
     return window
 
 
-class UserWidget(QFrame):
+class ButtonWidget(QAbstractButton):
+
+    """Base class for custom composite button widgets."""
+
+    def paintEvent(self, event):
+        opt = QStyleOption()
+        opt.initFrom(self)
+        opt.state |= (QStyle.State_Sunken if self.isDown() else
+                      QStyle.State_Raised)
+        p = QStylePainter(self)
+        p.drawPrimitive(QStyle.PE_Widget, opt)
+
+    def sizeHint(self):
+        return self.layout().totalSizeHint()
+
+
+class UserWidget(ButtonWidget):
 
     def __init__(self, parent, theme, steam, user):
         super().__init__(parent)
@@ -70,8 +87,7 @@ class UserWidget(QFrame):
         layout.addWidget(self.logout_button)
         layout.addWidget(self.delete_button)
         self.setLayout(layout)
-        self.setFrameShape(QFrame.Box)
-        self.setFrameShadow(QFrame.Raised)
+        self.clicked.connect(self.login_clicked)
         self.update_ui()
 
     def login_clicked(self):
@@ -95,9 +111,6 @@ class UserWidget(QFrame):
         self.steam.remove_user(self.user.account_name)
         self.hide()
         self.window().adjustSize()
-
-    def mousePressEvent(self, event):
-        self.login_clicked()
 
     def update_ui(self):
         enabled = self.steam.has_cookie(self.user.account_name)
