@@ -69,6 +69,7 @@ class SteamLinux:
         pidtext = str(os.getpid())
         write_file(pidfile, pidtext)
 
+    _lock_fd = -1
     _pipe_fd = -1
     _thread = None
 
@@ -98,12 +99,15 @@ class SteamLinux:
     def ensure_single_acolyte_instance(self):
         """Ensure that we are the only acolyte instance. Return true if we are
         the first instance, false if another acolyte instance is running."""
+        if self._lock_fd != -1:
+            return True
         pid_file = os.path.join(self.root, 'acolyte', 'acolyte.lock')
         self._lock_fd = os.open(pid_file, os.O_WRONLY | os.O_CREAT, 0o644)
         try:
             fcntl.lockf(self._lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
             return True
         except IOError:
+            self.release_acolyte_instance_lock()
             return False
 
     def release_acolyte_instance_lock(self):

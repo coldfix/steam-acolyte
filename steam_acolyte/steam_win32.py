@@ -108,11 +108,16 @@ class SteamWin32:
 
     def ensure_single_acolyte_instance(self):
         """Ensure that we are the only acolyte instance."""
+        if self._mutex is not None:
+            return True
         name = b'acolyte-instance-lock-{4F0BE4F0-52F2-4A7F-BEAB-D02807303CBF}'
         self._mutex = winapi.CreateMutexA(None, False, name)
         if self._mutex is None:
             raise WinError()
-        return GetLastError() != ERROR_ALREADY_EXISTS
+        if GetLastError() == ERROR_ALREADY_EXISTS:
+            self.release_acolyte_instance_lock()
+            return False
+        return True
 
     def release_acolyte_instance_lock(self):
         if self._mutex:
