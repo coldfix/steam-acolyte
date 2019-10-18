@@ -12,10 +12,9 @@ def create_login_dialog(steam, theme):
     window.setWindowTitle("Steam Acolyte")
     users = sorted(steam.users(), key=lambda u:
                    (u.persona_name.lower(), u.account_name.lower()))
+    users.append(SteamUser('', '', '', ''))
     for user in users:
         layout.addWidget(UserWidget(theme, steam, user))
-    layout.addWidget(
-        UserWidget(theme, steam, SteamUser('', '', '', '')))
     window.setWindowIcon(theme.window_icon)
     window.setStyleSheet(theme.window_style)
     steam.command_received.connect(lambda *_: window.activateWindow())
