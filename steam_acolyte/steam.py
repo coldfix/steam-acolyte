@@ -6,6 +6,7 @@ import vdf
 import os
 import sys
 import shlex
+from time import sleep
 from shutil import copyfile
 from abc import abstractmethod
 
@@ -138,7 +139,7 @@ class Steam(SteamImpl, SteamBase, QObject):
                 self._set_steam_pid()
                 self._listen()
                 return (True, True)
-            os.sched_yield()
+            sleep(0.050)
 
     def _steam_cmdl_received(self, line):
         self.args = shlex.split(line.rstrip())[1:]
