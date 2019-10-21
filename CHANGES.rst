@@ -1,6 +1,18 @@
 CHANGES
 -------
 
+0.4.0
+~~~~~
+
+- store current login on program start
+- show a tray icon to inform users when acolyte is running
+- fix an issue where the mouse hover effects stop working after hiding and
+  showing the window
+- trigger buttons when mouse is released, not already when pressed. This
+  better emulates normal button behaviour
+- highlight button being pressed in a different color
+
+
 0.3.5
 ~~~~~
 
