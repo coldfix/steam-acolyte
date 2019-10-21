@@ -1,11 +1,18 @@
 from steam_acolyte.steam import SteamUser
 from steam_acolyte.async_ import AsyncTask
 
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QDialog, QLabel, QToolButton, QAbstractButton,
     QAction, QHBoxLayout, QVBoxLayout, QSizePolicy,
     QStyle, QStyleOption, QStylePainter, QWidget,
-    QSystemTrayIcon, QMenu)
+    QSystemTrayIcon, QMenu, QApplication)
+
+
+try:                        # PyQt >= 5.11
+    QueuedConnection = Qt.ConnectionType.QueuedConnection
+except AttributeError:      # PyQt < 5.11
+    QueuedConnection = Qt.QueuedConnection
 
 
 class LoginDialog(QDialog):
@@ -89,7 +96,33 @@ class LoginDialog(QDialog):
         exit.triggered.connect(self._on_exit)
         menu = QMenu()
         menu.addAction(exit)
+        menu.aboutToShow.connect(self.position_menu, QueuedConnection)
         return menu
+
+    def position_menu(self):
+        menu = self.trayicon.contextMenu()
+        desktop = QApplication.desktop()
+        screen = QApplication.screens()[desktop.screenNumber(menu)]
+
+        screen_geom = screen.availableGeometry()
+        menu_size = menu.sizeHint()
+        icon_geom = self.trayicon.geometry()
+
+        if icon_geom.left() + menu_size.width() <= screen_geom.right():
+            left = icon_geom.left()
+        elif icon_geom.right() - menu_size.width() >= screen_geom.left():
+            left = icon_geom.right() - menu_size.width()
+        else:
+            return
+
+        if icon_geom.bottom() + menu_size.height() <= screen_geom.bottom():
+            top = icon_geom.bottom()
+        elif icon_geom.top() - menu_size.height() >= screen_geom.top():
+            top = icon_geom.top() - menu_size.height()
+        else:
+            return
+
+        menu.move(left, top)
 
     def _on_exit(self):
         """Exit acolyte."""
