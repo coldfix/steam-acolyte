@@ -17,6 +17,7 @@ class LoginDialog(QDialog):
         self.trayicon = None
         self.wait_task = None
         self.process = None
+        self._exit = False
         self.user_widgets = []
         self.setLayout(QVBoxLayout())
         self.setWindowTitle("Steam Acolyte")
@@ -42,11 +43,17 @@ class LoginDialog(QDialog):
                 item.widget().deleteLater()
 
     def wait_for_lock(self):
+        if self._exit:
+            self.close()
+            return
         self.wait_task = AsyncTask(self.steam.wait_for_lock)
         self.wait_task.finished.connect(self._on_locked)
         self.wait_task.start()
 
     def _on_locked(self):
+        if self._exit:
+            self.close()
+            return
         self.wait_task = None
         self.steam.store_login_cookie()
         self.update_userlist()
@@ -70,10 +77,24 @@ class LoginDialog(QDialog):
         exit = QAction('&Quit', self)
         exit.setToolTip('Exit acolyte.')
         exit.setIcon(style.standardIcon(QStyle.SP_DialogCloseButton))
-        exit.triggered.connect(self.close)
+        exit.triggered.connect(self._on_exit)
         menu = QMenu()
         menu.addAction(exit)
         return menu
+
+    def _on_exit(self):
+        """Exit acolyte."""
+        # We can't quit if steam is still running because QProcess would
+        # terminate the child with us. In this case, we hide the trayicon and
+        # set an exit flag that to remind us about to exit as soon as steam is
+        # finished.
+        self.trayicon.setVisible(False)
+        if self.isVisible():
+            self.close()
+        else:
+            self._exit = True
+            self.steam.unlock()
+            self.steam.release_acolyte_instance_lock()
 
     def run_steam(self, username):
         # Close and recreate after steam is finished. This serves two purposes:
