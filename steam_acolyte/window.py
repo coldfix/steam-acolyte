@@ -4,7 +4,7 @@ from steam_acolyte.async_ import AsyncTask
 from PyQt5.QtWidgets import (
     QDialog, QLabel, QToolButton, QAbstractButton,
     QAction, QHBoxLayout, QVBoxLayout, QSizePolicy,
-    QStyle, QStyleOption, QStylePainter,
+    QStyle, QStyleOption, QStylePainter, QWidget,
     QSystemTrayIcon, QMenu)
 
 
@@ -35,12 +35,15 @@ class LoginDialog(QDialog):
             self.layout().addWidget(UserWidget(self, user))
 
     def clear_layout(self):
+        # The safest way I found to clear a QLayout is to reparent it to a
+        # temporary widget. This also recursively reparents, hides and later
+        # destroys any child widgets.
         layout = self.layout()
-        while layout.count():
-            item = layout.takeAt(0)
-            if item.widget():
-                item.widget().hide()
-                item.widget().deleteLater()
+        if layout is not None:
+            dump = QWidget()
+            dump.setLayout(layout)
+            dump.deleteLater()
+        self.setLayout(QVBoxLayout())
 
     def wait_for_lock(self):
         if self._exit:
