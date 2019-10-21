@@ -31,28 +31,44 @@ def main(args=None):
         print(e, file=sys.stderr)
         return 1
 
+    cli_mode = opts['store'] or opts['switch'] or opts['start']
+
     first, locked = steam.lock(['-foreground'])
     try:
         if not first:
             print("Acolyte is already running. Terminating.")
             return 0
-        if not locked:
-            print("Waiting for steam to exit.")
-            steam.unlock()
-            while not steam.lock():
+        if cli_mode:
+            if not locked:
+                print("Waiting for steam to exit.")
+                steam.wait_for_lock()
+            if opts['store']:
+                steam.store_login_cookie()
+            elif opts['switch']:
+                steam.switch_user(opts['<USER>'])
+            elif opts['start']:
+                steam.switch_user(opts['<USER>'])
                 steam.unlock()
-                steam.wait_for_steam_exit()
-        if opts['store']:
-            steam.store_login_cookie()
-        elif opts['switch']:
-            steam.switch_user(opts['<USER>'])
-        elif opts['start']:
-            steam.switch_user(opts['<USER>'])
-            steam.run()
-            steam.store_login_cookie()
+                steam.run().waitForFinished(-1)
+                steam.lock()
+                steam.store_login_cookie()
         else:
-            create_gui(steam)
-            return app.exec_()
+            from steam_acolyte.window import LoginDialog
+            from steam_acolyte.theme import load_theme
+            init_app()
+            window = LoginDialog(steam, load_theme())
+            window.show_trayicon()
+            try:
+                if locked:
+                    steam.store_login_cookie()
+                    window.show()
+                else:
+                    print("Waiting for steam to exit.")
+                    window.show_waiting_message()
+                    window.wait_for_lock()
+                return app.exec_()
+            finally:
+                window.hide_trayicon()
     except KeyboardInterrupt:
         print()
         return 1
@@ -61,9 +77,7 @@ def main(args=None):
         steam.release_acolyte_instance_lock()
 
 
-def create_gui(steam):
-    from steam_acolyte.window import create_login_dialog
-    from steam_acolyte.theme import load_theme
+def init_app():
     import signal
     sys.excepthook = except_handler
     # Setup handling of KeyboardInterrupt (Ctrl-C) for PyQt:
@@ -73,9 +87,6 @@ def create_gui(steam):
     # http://stackoverflow.com/questions/4938723/what-is-the-correct-way-to-make-my-pyqt-application-quit-when-killed-from-the-console
     signal.signal(signal.SIGINT, interrupt_handler)
     safe_timer(50, lambda: None)
-    theme = load_theme()
-    steam.login_window = create_login_dialog(steam, theme)
-    steam.login_window.show()
 
 
 def except_handler(*args, **kwargs):
