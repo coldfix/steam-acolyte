@@ -70,6 +70,12 @@ class LoginDialog(QDialog):
         self.trayicon.activated.connect(self.trayicon_clicked)
         self.trayicon.setContextMenu(self.createMenu())
 
+    def hide_trayicon(self):
+        if self.trayicon is not None:
+            self.trayicon.setVisible(False)
+            self.trayicon.deleteLater()
+            self.trayicon = None
+
     def trayicon_clicked(self, reason):
         if reason == QSystemTrayIcon.Trigger:
             if self.isVisible():
@@ -91,7 +97,7 @@ class LoginDialog(QDialog):
         # terminate the child with us. In this case, we hide the trayicon and
         # set an exit flag that to remind us about to exit as soon as steam is
         # finished.
-        self.trayicon.setVisible(False)
+        self.hide_trayicon()
         if self.isVisible():
             self.close()
         else:
@@ -110,8 +116,9 @@ class LoginDialog(QDialog):
         self.process.finished.connect(self.wait_for_lock)
 
     def show_waiting_message(self):
-        self.trayicon.showMessage(
-            "steam-acolyte", "The damned stand ready.")
+        if self.trayicon is not None:
+            self.trayicon.showMessage(
+                "steam-acolyte", "The damned stand ready.")
 
 
 class ButtonWidget(QAbstractButton):

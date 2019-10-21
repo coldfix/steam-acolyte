@@ -58,14 +58,17 @@ def main(args=None):
             init_app()
             window = LoginDialog(steam, load_theme())
             window.show_trayicon()
-            if locked:
-                steam.store_login_cookie()
-                window.show()
-            else:
-                print("Waiting for steam to exit.")
-                window.show_waiting_message()
-                window.wait_for_lock()
-            return app.exec_()
+            try:
+                if locked:
+                    steam.store_login_cookie()
+                    window.show()
+                else:
+                    print("Waiting for steam to exit.")
+                    window.show_waiting_message()
+                    window.wait_for_lock()
+                return app.exec_()
+            finally:
+                window.hide_trayicon()
     except KeyboardInterrupt:
         print()
         return 1
