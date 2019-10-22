@@ -1,6 +1,12 @@
 CHANGES
 -------
 
+0.4.1
+~~~~~
+
+- align context menu with tray icon
+
+
 0.4.0
 ~~~~~
 
