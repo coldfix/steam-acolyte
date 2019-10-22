@@ -1,6 +1,12 @@
 CHANGES
 -------
 
+0.4.2
+~~~~~
+
+- fix FileNotFoundError from acolyte.lock
+
+
 0.4.1
 ~~~~~
 
