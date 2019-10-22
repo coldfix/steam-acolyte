@@ -102,6 +102,7 @@ class SteamLinux:
         if self._lock_fd != -1:
             return True
         pid_file = os.path.join(self.root, 'acolyte', 'acolyte.lock')
+        os.makedirs(os.path.dirname(pid_file), exist_ok=True)
         self._lock_fd = os.open(pid_file, os.O_WRONLY | os.O_CREAT, 0o644)
         try:
             fcntl.lockf(self._lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
