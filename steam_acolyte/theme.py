@@ -1,6 +1,9 @@
 from PyQt5.QtGui import QIcon
 
-from importlib_resources import read_text, path
+try:
+    from importlib.resources import read_text, path
+except ImportError:
+    from importlib_resources import read_text, path
 
 import os
 from types import SimpleNamespace
