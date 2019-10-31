@@ -1,6 +1,12 @@
 CHANGES
 -------
 
+0.4.3
+~~~~~
+
+- use python's builtin importlib.resources if available
+
+
 0.4.2
 ~~~~~
 
