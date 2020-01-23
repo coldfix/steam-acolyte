@@ -1,6 +1,12 @@
 CHANGES
 -------
 
+0.4.4
+~~~~~
+
+- fix tooltips being shown in unreadable colors
+- fix exception if loginusers doesn't exist on startup
+
 0.4.3
 ~~~~~
 
