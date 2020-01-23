@@ -4,8 +4,11 @@ import shlex
 
 def read_file(filename):
     """Read full contents of given file."""
-    with open(filename) as f:
-        return f.read()
+    try:
+        with open(filename) as f:
+            return f.read()
+    except FileNotFoundError:
+        return ''
 
 
 def write_file(filename, text):

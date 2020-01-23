@@ -154,7 +154,8 @@ class Steam(SteamImpl, SteamBase, QObject):
 
     def users(self):
         """Return a list of ``SteamUser``."""
-        users = self.read_config('loginusers.vdf')['users']
+        config = self.read_config('loginusers.vdf')
+        users = subkey_lookup(config, r'users')
         return [
             SteamUser(uid, u['AccountName'], u['PersonaName'], u['Timestamp'])
             for uid, u in users.items()
@@ -184,7 +185,7 @@ class Steam(SteamImpl, SteamBase, QObject):
         loginusers = self.read_config('loginusers.vdf')
         loginusers['users'] = {
             uid: info
-            for uid, info in loginusers['users'].items()
+            for uid, info in subkey_lookup(loginusers, r'users').items()
             if info['AccountName'] != username
         }
         self.write_config('loginusers.vdf', loginusers)
@@ -226,7 +227,7 @@ class Steam(SteamImpl, SteamBase, QObject):
         """Read steam config.vdf file."""
         conf = os.path.join(self.root, 'config', filename)
         text = read_file(conf)
-        return vdf.loads(text)
+        return vdf.loads(text) if text else {}
 
     def write_config(self, filename, data):
         conf = os.path.join(self.root, 'config', filename)
