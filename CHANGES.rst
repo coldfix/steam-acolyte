@@ -1,6 +1,11 @@
 CHANGES
 -------
 
+0.4.5
+~~~~~
+
+- fix exception that occurs if loginusers doesn't exist on startup or is empty
+
 0.4.4
 ~~~~~
 
