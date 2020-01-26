@@ -6,6 +6,9 @@ python:
 
 install:
   - python setup.py sdist bdist_wheel
+  # Need new pip versions to deal with recent manylinux wheels. At the time of
+  # writing, PyQt5 is released as manylinux2014 whl which requires pip 19.3:
+  - pip install --upgrade pip
   - pip install dist/*.whl
   - pip install flake8 twine
 
