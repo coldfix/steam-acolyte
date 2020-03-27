@@ -1,16 +1,24 @@
 CHANGES
 -------
 
+0.5.0
+~~~~~
+
+- add CLI option --exe for setting steam executable
+
+
 0.4.5
 ~~~~~
 
 - fix exception that occurs if loginusers doesn't exist on startup or is empty
+
 
 0.4.4
 ~~~~~
 
 - fix tooltips being shown in unreadable colors
 - fix exception if loginusers doesn't exist on startup
+
 
 0.4.3
 ~~~~~
