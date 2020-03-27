@@ -63,7 +63,8 @@ a = Analysis(
     pathex=['.'],
     datas=(
         collect_data_files('steam_acolyte') +
-        collect_data_files('importlib_resources'))
+        (collect_data_files('importlib_resources')
+         if sys.version_info < (3, 7) else []))
 )
 
 pyz = PYZ(a.pure, a.zipped_data)
