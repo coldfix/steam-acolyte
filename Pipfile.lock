@@ -66,11 +66,11 @@
         },
         "vdf": {
             "hashes": [
-                "sha256:83f3b509fe99a4d842b74af3d0b1742be99f7098dae1d3eb7ca57522986737d5",
-                "sha256:8e0d33ebe0bafd991be3236ce1bd211e368e9a2b8bc376dacd5f6b77066afb90"
+                "sha256:9193901ce20ee08391c1d5044234b5da021d939b00ce879f5aae0a1a759577bc",
+                "sha256:f88db3a3e66e7264da7fdacf0ffa1d99be52dd30510b2c1a1340171b227472e4"
             ],
             "index": "pypi",
-            "version": "==3.2"
+            "version": "==3.3"
         }
     },
     "develop": {}
