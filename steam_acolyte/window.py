@@ -2,6 +2,7 @@ from steam_acolyte.steam import SteamUser
 from steam_acolyte.async_ import AsyncTask
 
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (
     QDialog, QLabel, QToolButton, QAbstractButton,
     QAction, QHBoxLayout, QVBoxLayout, QSizePolicy,
@@ -25,6 +26,7 @@ class LoginDialog(QDialog):
         self.wait_task = None
         self.process = None
         self._exit = False
+        self._login = None
         self.user_widgets = []
         self.setLayout(QVBoxLayout())
         self.setWindowTitle("Steam Acolyte")
@@ -68,6 +70,10 @@ class LoginDialog(QDialog):
         self.wait_task = None
         self.steam.store_login_cookie()
         self.update_userlist()
+        if self._login:
+            self.run_steam(self._login)
+            self._login = None
+            return
         self.show()
 
     def show_trayicon(self):
@@ -94,17 +100,37 @@ class LoginDialog(QDialog):
         stop = self.stopAction = QAction('&Exit Steam', self)
         stop.setToolTip('Signal steam to exit.')
         stop.setIcon(style.standardIcon(QStyle.SP_MediaStop))
-        stop.triggered.connect(self._on_exit_steam)
+        stop.triggered.connect(self.exit_steam)
         stop.setEnabled(False)
         exit = QAction('&Quit', self)
         exit.setToolTip('Exit acolyte.')
         exit.setIcon(style.standardIcon(QStyle.SP_DialogCloseButton))
         exit.triggered.connect(self._on_exit)
+
+        self.newUserAction = make_user_action(
+            self, SteamUser('', '', '', ''))
+        self.userActions = []
         menu = QMenu()
+        menu.addSection('Login')
+        menu.addAction(self.newUserAction)
+        menu.addSeparator()
         menu.addAction(stop)
         menu.addAction(exit)
-        menu.aboutToShow.connect(self.position_menu, QueuedConnection)
+        menu.aboutToShow.connect(self.update_menu, QueuedConnection)
         return menu
+
+    def update_menu(self):
+        self.populate_menu()
+        self.position_menu()
+
+    def populate_menu(self):
+        menu = self.trayicon.contextMenu()
+        for action in self.userActions:
+            menu.removeAction(action)
+        users = sorted(self.steam.users(), key=lambda u:
+                       (u.persona_name.lower(), u.account_name.lower()))
+        self.userActions = [make_user_action(self, user) for user in users]
+        menu.insertActions(self.newUserAction, self.userActions)
 
     def position_menu(self):
         menu = self.trayicon.contextMenu()
@@ -131,8 +157,9 @@ class LoginDialog(QDialog):
 
         menu.move(left, top)
 
-    def _on_exit_steam(self):
+    def exit_steam(self):
         """Send shutdown command to steam."""
+        self.stopAction.setEnabled(False)
         self.steam.stop()
 
     def _on_exit(self):
@@ -148,6 +175,16 @@ class LoginDialog(QDialog):
             self._exit = True
             self.steam.unlock()
             self.steam.release_acolyte_instance_lock()
+
+    def login(self, username):
+        """
+        Exit steam if open, and login the user with the given username.
+        """
+        if self.isVisible():
+            self.run_steam(username)
+        else:
+            self._login = username
+            self.exit_steam()
 
     def run_steam(self, username):
         # Close and recreate after steam is finished. This serves two purposes:
@@ -180,6 +217,17 @@ class ButtonWidget(QAbstractButton):
 
     def sizeHint(self):
         return self.layout().totalSizeHint()
+
+
+def make_user_action(window, user):
+    theme = window.theme
+    action = QAction(user.persona_name or "(New account)", window)
+    action.triggered.connect(lambda: window.login(user.account_name))
+    action.setToolTip("Login {}".format(
+        user.account_name or "new account"))
+    action.setIcon(QIcon(
+        theme.user_icon if user.account_name else theme.plus_icon))
+    return action
 
 
 class UserWidget(ButtonWidget):
@@ -237,7 +285,7 @@ class UserWidget(ButtonWidget):
         self.update_ui()
 
     def login_clicked(self):
-        self.window().run_steam(self.user.account_name)
+        self.window().login(self.user.account_name)
 
     def logout_clicked(self):
         self.steam.remove_login_cookie(self.user.account_name)
