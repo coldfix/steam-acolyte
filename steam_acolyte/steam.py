@@ -223,6 +223,11 @@ class Steam(SteamImpl, SteamBase, QObject):
         process.start(self.exe, self.args)
         return process
 
+    def stop(self):
+        """Signal steam to exit."""
+        if self._is_steam_pid_valid() and self._connect():
+            self._send([self.exe, '-shutdown'])
+
     def read_config(self, filename='config.vdf'):
         """Read steam config.vdf file."""
         conf = os.path.join(self.root, 'config', filename)

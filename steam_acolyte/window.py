@@ -64,6 +64,7 @@ class LoginDialog(QDialog):
         if self._exit:
             self.close()
             return
+        self.stopAction.setEnabled(False)
         self.wait_task = None
         self.steam.store_login_cookie()
         self.update_userlist()
@@ -90,11 +91,17 @@ class LoginDialog(QDialog):
 
     def createMenu(self):
         style = self.style()
+        stop = self.stopAction = QAction('&Exit Steam', self)
+        stop.setToolTip('Signal steam to exit.')
+        stop.setIcon(style.standardIcon(QStyle.SP_MediaStop))
+        stop.triggered.connect(self._on_exit_steam)
+        stop.setEnabled(False)
         exit = QAction('&Quit', self)
         exit.setToolTip('Exit acolyte.')
         exit.setIcon(style.standardIcon(QStyle.SP_DialogCloseButton))
         exit.triggered.connect(self._on_exit)
         menu = QMenu()
+        menu.addAction(stop)
         menu.addAction(exit)
         menu.aboutToShow.connect(self.position_menu, QueuedConnection)
         return menu
@@ -124,6 +131,10 @@ class LoginDialog(QDialog):
 
         menu.move(left, top)
 
+    def _on_exit_steam(self):
+        """Send shutdown command to steam."""
+        self.steam.stop()
+
     def _on_exit(self):
         """Exit acolyte."""
         # We can't quit if steam is still running because QProcess would
@@ -145,6 +156,7 @@ class LoginDialog(QDialog):
         self.hide()
         self.steam.switch_user(username)
         self.steam.unlock()
+        self.stopAction.setEnabled(True)
         self.process = self.steam.run()
         self.process.finished.connect(self.wait_for_lock)
 
