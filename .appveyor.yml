@@ -12,9 +12,7 @@ install:
 build: off
 
 test_script:
-  # pyinstaller 3.5 doesn't work with pyqt 5.12.3, see:
-  # https://github.com/pyinstaller/pyinstaller/issues/4293
-  - pip install pyqt5==5.12.2
+  - pip install pyqt5
   - pip install -e .
   - pip install flake8 pyinstaller
   - flake8
