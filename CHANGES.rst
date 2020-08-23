@@ -1,6 +1,12 @@
 CHANGES
 -------
 
+0.6.0
+~~~~~
+
+- add menu item for shutting down steam
+- add menu items for direct user switching without showing the GUI
+
 0.5.0
 ~~~~~
 
