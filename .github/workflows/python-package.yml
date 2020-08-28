@@ -37,13 +37,13 @@ jobs:
       - name: Extract release info
         id: release
         run: |
-          echo "::set-output name=tagname::${GITHUB_REF##*/}"
+          echo "::set-output name=version::${GITHUB_REF##*/v}"
           echo "::set-output name=md5sum::$(md5sum dist/*.tar.gz | cut -d' ' -f1)"
 
       - name: Generate PKGBUILD
         run: |
           sed .github/PKGBUILD >dist/PKGBUILD \
-            -e "s/{{VERSION}}/${{ steps.release.outputs.tagname }}/" \
+            -e "s/{{VERSION}}/${{ steps.release.outputs.version }}/" \
             -e "s/{{MD5SUM}}/${{ steps.release.outputs.md5sum }}/"
           cat dist/PKGBUILD
 
