@@ -67,7 +67,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ steps.tag.outputs.tag }}
+          release_name: ${{ steps.tag.outputs.tag }}
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
