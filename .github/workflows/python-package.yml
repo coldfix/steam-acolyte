@@ -34,6 +34,19 @@ jobs:
       - run: twine check dist/*
       - run: flake8
 
+      - name: Extract release info
+        id: release
+        run: |
+          echo "::set-output name=tagname::${GITHUB_REF##*/}"
+          echo "::set-output name=md5sum::$(md5sum dist/*.tar.gz | cut -d' ' -f1)"
+
+      - name: Generate PKGBUILD
+        run: |
+          sed .github/PKGBUILD >dist/PKGBUILD \
+            -e "s/{{VERSION}}/${{ steps.release.outputs.tagname }}/" \
+            -e "s/{{MD5SUM}}/${{ steps.release.outputs.md5sum }}/"
+          cat dist/PKGBUILD
+
       - uses: actions/upload-artifact@v2
         with:
           name: dist
@@ -58,8 +71,22 @@ jobs:
           python-version: '3.x'
       - run: pip install twine
 
+      - name: Extract release info
+        id: release
+        run: echo "::set-output name=tagname::${GITHUB_REF##*/}"
+
       - name: Publish PyPI package
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        run: twine upload dist/*
+        run: twine upload dist/*.whl dist/*.tar.gz
+
+      - name: Publish AUR package
+        uses: KSXGitHub/github-actions-deploy-aur@master
+        with:
+          pkgname: steam-acolyte
+          pkgbuild: dist/PKGBUILD
+          commit_message: Update to ${{ steps.release.outputs.tagname }}
+          commit_username: acolyte
+          commit_email: ${{ secrets.AUR_EMAIL }}
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
