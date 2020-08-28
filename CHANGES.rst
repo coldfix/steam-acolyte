@@ -1,6 +1,11 @@
 CHANGES
 -------
 
+0.6.3
+~~~~~
+
+- maintenance release with no code changes: fixup AUR version format
+
 0.6.2
 ~~~~~
 
