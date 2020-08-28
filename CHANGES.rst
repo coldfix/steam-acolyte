@@ -1,6 +1,12 @@
 CHANGES
 -------
 
+0.6.2
+~~~~~
+
+- maintenance release with no code changes: automate AUR package update
+
+
 0.6.1
 ~~~~~
 
