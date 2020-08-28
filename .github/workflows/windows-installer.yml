@@ -25,7 +25,7 @@ jobs:
       - name: Build icons
         shell: cmd
         run: |
-          refreshenv
+          call refreshenv
           magick -background none steam_acolyte/acolyte.svg -resize 16x16 _16.ico
           magick -background none steam_acolyte/acolyte.svg -resize 32x32 _32.ico
           magick -background none steam_acolyte/acolyte.svg -resize 48x48 _48.ico
@@ -34,7 +34,6 @@ jobs:
           magick -background none steam_acolyte/acolyte.svg -resize 256x256 _256.ico
           magick -background none _16.ico _32.ico _48.ico _64.ico _128.ico _256.ico acolyte.ico
 
-      - run: refreshenv
       - run: pyinstaller steam-acolyte.spec
 
       - uses: actions/upload-artifact@v2
