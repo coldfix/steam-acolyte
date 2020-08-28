@@ -1,6 +1,13 @@
 CHANGES
 -------
 
+0.6.1
+~~~~~
+
+- built windows exe against newest pyqt
+- migrate builds to github actions
+
+
 0.6.0
 ~~~~~
 
