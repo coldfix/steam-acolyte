@@ -37,8 +37,10 @@ jobs:
       - name: Extract release info
         id: release
         run: |
-          echo "::set-output name=version::${GITHUB_REF##*/v}"
-          echo "::set-output name=md5sum::$(md5sum dist/*.tar.gz | cut -d' ' -f1)"
+          MD5SUM=$(md5sum dist/*.tar.gz | cut -d ' ' -f1)
+          VERSION=$(python -c 'import steam_acolyte as s;print(s.__version__)')
+          echo "::set-output name=version::$VERSION"
+          echo "::set-output name=md5sum::$MD5SUM"
 
       - name: Generate PKGBUILD
         run: |
