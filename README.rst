@@ -30,7 +30,7 @@ I recommend using pipx_ rather than *pip*.
 For windows, an all-inclusive .exe file can be created using pyinstaller from
 the development files as follows::
 
-    pip install pyinstaller
+    pip install -U pyinstaller
     pyinstaller steam-acolyte.spec
 
 For your convenience, a prebuilt .exe can also be downloaded from the `github

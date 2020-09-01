@@ -23,19 +23,7 @@ def get_version():
     version = [int(p) for p in version if p.isnumeric()]
     version += [int(os.environ.get('APPVEYOR_BUILD_NUMBER', 0))]
 
-    # The following is a hack specific to pyinstaller 3.5 that is needed to
-    # pass a VSVersionInfo directly to EXE(): EXE assumes that the `version`
-    # argument is a path-like object and therefore has to be tricked into
-    # ignoring it by exhibiting a falsy value in boolean context. However, the
-    # object is later passed into the `SetVersion` function which can also
-    # handle VSVersionInfo directly.
-    class VersionInfo(VSVersionInfo):
-        _count = 0
-        def __bool__(self):
-            self._count += 1
-            return self._count > 1
-
-    return VersionInfo(
+    return VSVersionInfo(
         ffi=FixedFileInfo(
             filevers=tuple(version)[:4],
             prodvers=tuple(version)[:4],
