@@ -191,6 +191,7 @@ class FileReaderThread(QThread):
 
 
 def is_process_running(pid):
+    """Check if a process with the given PID is currently running."""
     try:
         os.kill(pid, 0)
         return True

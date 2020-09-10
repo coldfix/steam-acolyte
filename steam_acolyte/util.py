@@ -22,19 +22,21 @@ def join_args(args):
     return ' '.join(map(shlex.quote, args))
 
 
-def func_lookup(lib, types, declarations):
+def import_declarations(lib, types, declarations):
+    """Lookup C declarations from the given ctypes library object."""
     funcs = {}
     funcdecl = re.compile(
         r'^(\w+)\s+(\w+)\((\w+\s*(?:,\s*\w+\s*)*)?\)$', re.ASCII)
-    for decl in declarations.split(';'):
-        decl = decl.strip()
-        if not decl:
-            continue
-        restype, name, argtypes = funcdecl.match(decl).groups()
-        func = funcs[name] = getattr(lib, name)
-        func.restype = getattr(types, restype)
-        func.argtypes = [getattr(types, t.strip())
-                         for t in argtypes.split(',')]
+    for line in declarations.split(';'):
+        line = line.strip()
+        if line:
+            restype, name, argtypes = funcdecl.match(line).groups()
+            func = funcs[name] = getattr(lib, name)
+            func.restype = getattr(types, restype)
+            func.argtypes = [
+                getattr(types, t.strip())
+                for t in argtypes.split(',')
+            ]
     return funcs
 
 

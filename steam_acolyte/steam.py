@@ -150,6 +150,8 @@ class Steam(SteamImpl, SteamBase, QObject):
             sleep(0.050)
 
     def _steam_cmdl_received(self, line):
+        """When steam is executed while we hold the steam instance lock, this
+        function receives and stores steam's command line arguments."""
         self.args = shlex.split(line.rstrip())[1:]
 
     def users(self):
@@ -162,6 +164,7 @@ class Steam(SteamImpl, SteamBase, QObject):
         ]
 
     def store_login_cookie(self):
+        """Save the login token from the last active steam account."""
         username = self.get_last_user()
         userpath = os.path.join(self.root, 'acolyte', username, 'config.vdf')
         configpath = os.path.join(self.root, 'config', 'config.vdf')
@@ -176,11 +179,14 @@ class Steam(SteamImpl, SteamBase, QObject):
                   .format(username))
 
     def remove_login_cookie(self, username):
+        """Delete saved login token."""
         userpath = os.path.join(self.root, 'acolyte', username, 'config.vdf')
         if os.path.isfile(userpath):
             os.remove(userpath)
 
     def remove_user(self, username):
+        """Delete login token and remove account from the list of saved
+        accounts."""
         self.remove_login_cookie(username)
         loginusers = self.read_config('loginusers.vdf')
         loginusers['users'] = {
@@ -197,6 +203,7 @@ class Steam(SteamImpl, SteamBase, QObject):
         self.write_config('config.vdf', config)
 
     def has_cookie(self, username):
+        """Check if there is a saved login cookie."""
         userpath = os.path.join(self.root, 'acolyte', username, 'config.vdf')
         return bool(username) and os.path.isfile(userpath)
 
@@ -235,6 +242,7 @@ class Steam(SteamImpl, SteamBase, QObject):
         return vdf.loads(text) if text else {}
 
     def write_config(self, filename, data):
+        """Write steam config.vdf file."""
         conf = os.path.join(self.root, 'config', filename)
         text = vdf.dumps(data, pretty=True)
         write_file(conf, text)

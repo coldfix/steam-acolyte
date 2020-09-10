@@ -1,4 +1,4 @@
-from .util import join_args, func_lookup
+from .util import join_args, import_declarations
 
 from PyQt5.QtCore import QWinEventNotifier
 
@@ -23,7 +23,7 @@ EVENT_MODIFY_STATE = 0x00000002
 WAIT_TIMEOUT       = 0x00000102
 
 
-winapi = SimpleNamespace(**func_lookup(windll.kernel32, wintypes, """
+winapi = SimpleNamespace(**import_declarations(windll.kernel32, wintypes, """
     BOOL CloseHandle(HANDLE);
 
     HANDLE CreateEventA(LPCVOID, BOOL, BOOL, LPCSTR);
@@ -131,17 +131,21 @@ class SteamWin32:
 
 
 def is_process_running(pid):
+    """Check if a process with the given PID is currently running."""
     # Steam seems to use ProcessIdToSessionId to distinguish the case where the
     # other steam instance is running in the same user session, but I don't know
     # how it would handle this case, so let's just check if another steam
     # process is running at all:
-    return wait_process(pid, 0)
+    return not wait_process(pid, 0)
 
 
 def wait_process(pid, timeout=INFINITE):
+    """Wait until process with the given PID exits or the timeout expires.
+    Returns ``True`` if the process has exited before this function was called
+    or the timeout expires."""
     handle = winapi.OpenProcess(SYNCHRONIZE, False, pid)
     if not handle:
-        return False
-    status = winapi.WaitForSingleObject(handle, 0)
+        return True
+    status = winapi.WaitForSingleObject(handle, timeout)
     winapi.CloseHandle(handle)
-    return status == WAIT_TIMEOUT
+    return status != WAIT_TIMEOUT

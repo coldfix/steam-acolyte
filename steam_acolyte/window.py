@@ -36,6 +36,7 @@ class LoginDialog(QDialog):
         self.update_userlist()
 
     def update_userlist(self):
+        """Update the user list widget from the config file."""
         self.clear_layout()
         users = sorted(self.steam.users(), key=lambda u:
                        (u.persona_name.lower(), u.account_name.lower()))
@@ -44,6 +45,7 @@ class LoginDialog(QDialog):
             self.layout().addWidget(UserWidget(self, user))
 
     def clear_layout(self):
+        """Remove all users from the user list widget."""
         # The safest way I found to clear a QLayout is to reparent it to a
         # temporary widget. This also recursively reparents, hides and later
         # destroys any child widgets.
@@ -55,6 +57,8 @@ class LoginDialog(QDialog):
         self.setLayout(QVBoxLayout())
 
     def wait_for_lock(self):
+        """Start waiting for the steam instance lock asynchronously, and
+        show/activate the window when we acquire the lock."""
         if self._exit:
             self.close()
             return
@@ -63,6 +67,9 @@ class LoginDialog(QDialog):
         self.wait_task.start()
 
     def _on_locked(self):
+        """Executed when steam instance lock is acquired. Executes any queued
+        login command, or activates the user list widget if no command was
+        queued."""
         if self._exit:
             self.close()
             return
@@ -77,6 +84,7 @@ class LoginDialog(QDialog):
         self.show()
 
     def show_trayicon(self):
+        """Create and show the tray icon."""
         self.trayicon = QSystemTrayIcon(self.theme.window_icon)
         self.trayicon.setVisible(True)
         self.trayicon.setToolTip(
@@ -85,17 +93,20 @@ class LoginDialog(QDialog):
         self.trayicon.setContextMenu(self.createMenu())
 
     def hide_trayicon(self):
+        """Hide and destroy the tray icon."""
         if self.trayicon is not None:
             self.trayicon.setVisible(False)
             self.trayicon.deleteLater()
             self.trayicon = None
 
     def trayicon_clicked(self, reason):
+        """Activate window when tray icon is left-clicked."""
         if reason == QSystemTrayIcon.Trigger:
             if self.isVisible():
                 self.activateWindow()
 
     def createMenu(self):
+        """Compose tray menu."""
         style = self.style()
         stop = self.stopAction = QAction('&Exit Steam', self)
         stop.setToolTip('Signal steam to exit.')
@@ -120,10 +131,13 @@ class LoginDialog(QDialog):
         return menu
 
     def update_menu(self):
+        """Update menu just before showing: populate with current user list
+        and set position from tray icon."""
         self.populate_menu()
         self.position_menu()
 
     def populate_menu(self):
+        """Update user list menuitems in tray menu."""
         menu = self.trayicon.contextMenu()
         for action in self.userActions:
             menu.removeAction(action)
@@ -133,6 +147,7 @@ class LoginDialog(QDialog):
         menu.insertActions(self.newUserAction, self.userActions)
 
     def position_menu(self):
+        """Set menu position from tray icon."""
         menu = self.trayicon.contextMenu()
         desktop = QApplication.desktop()
         screen = QApplication.screens()[desktop.screenNumber(menu)]
@@ -187,6 +202,7 @@ class LoginDialog(QDialog):
             self.exit_steam()
 
     def run_steam(self, username):
+        """Run steam as the given user."""
         # Close and recreate after steam is finished. This serves two purposes:
         # 1. update user list and widget state
         # 2. fix ":hover" selector not working on linux after hide+show
@@ -198,6 +214,7 @@ class LoginDialog(QDialog):
         self.process.finished.connect(self.wait_for_lock)
 
     def show_waiting_message(self):
+        """If we are in the background, show waiting message as balloon."""
         if self.trayicon is not None:
             self.trayicon.showMessage(
                 "steam-acolyte", "The damned stand ready.")
@@ -220,6 +237,7 @@ class ButtonWidget(QAbstractButton):
 
 
 def make_user_action(window, user):
+    """Create a QAction for logging in the given user."""
     theme = window.theme
     action = QAction(user.persona_name or "(New account)", window)
     action.triggered.connect(lambda: window.login(user.account_name))
@@ -231,6 +249,10 @@ def make_user_action(window, user):
 
 
 class UserWidget(ButtonWidget):
+
+    """A button widget for a single user. When clicked, logs in that user.
+    Contains small buttons that delete the login token and remove the user
+    from the list."""
 
     def __init__(self, window, user):
         super().__init__(window)
