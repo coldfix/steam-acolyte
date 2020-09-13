@@ -78,6 +78,7 @@ class SteamLinux:
         return self._pipe_fd != -1
 
     def _listen(self):
+        self._has_steam_lock = True
         self._pipe_fd = self._open_pipe_for_reading(self.PIPE_FILE)
         self._thread = FileReaderThread(self._pipe_fd)
         self._thread.line_received.connect(self.command_received.emit)
@@ -95,6 +96,7 @@ class SteamLinux:
         if self._pipe_fd != -1:
             os.close(self._pipe_fd)
             self._pipe_fd = -1
+            self._has_steam_lock = False
 
     def ensure_single_acolyte_instance(self):
         """Ensure that we are the only acolyte instance. Return true if we are
@@ -106,6 +108,7 @@ class SteamLinux:
         self._lock_fd = os.open(pid_file, os.O_WRONLY | os.O_CREAT, 0o644)
         try:
             fcntl.lockf(self._lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            self._has_acolyte_lock = True
             return True
         except IOError:
             self.release_acolyte_instance_lock()
@@ -115,6 +118,7 @@ class SteamLinux:
         if self._lock_fd != -1:
             os.close(self._lock_fd)
             self._lock_fd = -1
+            self._has_acolyte_lock = False
 
     def wait_for_steam_exit(self):
         """Wait until steam is closed."""

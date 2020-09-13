@@ -102,7 +102,7 @@ class LoginDialog(QDialog):
     def trayicon_clicked(self, reason):
         """Activate window when tray icon is left-clicked."""
         if reason == QSystemTrayIcon.Trigger:
-            if self.isVisible():
+            if self.steam.has_steam_lock():
                 self.activateWindow()
 
     def createMenu(self):
@@ -181,10 +181,10 @@ class LoginDialog(QDialog):
         """Exit acolyte."""
         # We can't quit if steam is still running because QProcess would
         # terminate the child with us. In this case, we hide the trayicon and
-        # set an exit flag that to remind us about to exit as soon as steam is
+        # set an exit flag to remind us about to exit as soon as steam is
         # finished.
         self.hide_trayicon()
-        if self.isVisible():
+        if self.steam.has_steam_lock():
             self.close()
         else:
             self._exit = True
@@ -195,7 +195,7 @@ class LoginDialog(QDialog):
         """
         Exit steam if open, and login the user with the given username.
         """
-        if self.isVisible():
+        if self.steam.has_steam_lock():
             self.run_steam(username)
         else:
             self._login = username

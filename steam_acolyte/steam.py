@@ -99,21 +99,32 @@ class Steam(SteamImpl, SteamBase, QObject):
         super().__init__()
         self.root = root or self.find_root()
         self.exe = exe or self.find_exe()
-        self.command_received.connect(self._steam_cmdl_received)
         self.args = args
+        self._has_acolyte_lock = False
+        self._has_steam_lock = False
+        self.command_received.connect(self._steam_cmdl_received)
 
     def __del__(self):
         self.unlock()
         if hasattr(SteamImpl, '__del__'):
             SteamImpl.__del__(self)
 
+    def has_acolyte_lock(self):
+        """Whether this instance has the acolyte instance lock."""
+        return self._has_acolyte_lock
+
+    def has_steam_lock(self):
+        """Whether this instance has the steam lock."""
+        return self._has_steam_lock
+
     def wait_for_lock(self):
         """Wait until steam has exited, and lock can be acquired. May be
         called only if we are the first acolyte instance."""
-        self.unlock()
-        while not self.lock()[1]:
+        if not self.has_steam_lock():
             self.unlock()
-            self.wait_for_steam_exit()
+            while not self.lock()[1]:
+                self.unlock()
+                self.wait_for_steam_exit()
 
     def lock(self, args=None):
         """
@@ -232,8 +243,9 @@ class Steam(SteamImpl, SteamBase, QObject):
 
     def stop(self):
         """Signal steam to exit."""
-        if self._is_steam_pid_valid() and self._connect():
-            self._send([self.exe, '-shutdown'])
+        if not self.has_steam_lock():
+            if self._is_steam_pid_valid() and self._connect():
+                self._send([self.exe, '-shutdown'])
 
     def read_config(self, filename='config.vdf'):
         """Read steam config.vdf file."""
