@@ -158,7 +158,12 @@ class Steam(SteamImpl, SteamBase, QObject):
         # to the steam IPC:
         while True:
             first = self.ensure_single_acolyte_instance()
-            if self._is_steam_pid_valid() and self._connect():
+            # We ignore `self._is_steam_pid_valid()` here because it is
+            # unreliable. It can happen that the steam process itself has
+            # already exited, but some other processes (e.g. games) are still
+            # running and listening on the pipe - which will prevent steam
+            # from being started by us again.
+            if self._connect():
                 if args is not None:
                     self._send([self.exe, *args])
                 return (first, False)
