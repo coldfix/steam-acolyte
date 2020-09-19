@@ -60,6 +60,10 @@ class SteamBase:
         """Save current process ID as the last steam PID."""
 
     @abstractmethod
+    def _unset_steam_pid(self):
+        """Remove current process ID as the last steam PID."""
+
+    @abstractmethod
     def _connect(self) -> bool:
         """Connect to an already running steam instance. Returns true if
         successful. Called after ``_is_steam_pid_valid()`` returned true."""

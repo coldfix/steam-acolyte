@@ -85,6 +85,10 @@ class SteamWin32:
         reg.SetValueEx(self._ipc_key, 'SteamPID', 0, reg.REG_DWORD, os.getpid())
 
     @trace.method
+    def _unset_steam_pid(self):
+        reg.SetValueEx(self._ipc_key, 'SteamPID', 0, reg.REG_DWORD, 0)
+
+    @trace.method
     def _connect(self):
         self._event = winapi.OpenEventA(
             EVENT_MODIFY_STATE, False, self.EVENT_NAME)
@@ -116,6 +120,7 @@ class SteamWin32:
     @trace.method
     def unlock(self):
         if self._event:
+            self._unset_steam_pid()
             winapi.CloseHandle(self._event)
             self._event = None
             self._has_steam_lock = False

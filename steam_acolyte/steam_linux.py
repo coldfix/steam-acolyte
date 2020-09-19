@@ -75,6 +75,11 @@ class SteamLinux:
         pidtext = str(os.getpid())
         write_file(pidfile, pidtext)
 
+    @trace.method
+    def _unset_steam_pid(self):
+        pidfile = os.path.expanduser(self.PID_FILE)
+        write_file(pidfile, '')
+
     _lock_fd = -1
     _pipe_fd = -1
     _thread = None
@@ -104,6 +109,7 @@ class SteamLinux:
             self._thread.stop()
             self._thread = None
         if self._pipe_fd != -1:
+            self._unset_steam_pid()
             os.close(self._pipe_fd)
             self._pipe_fd = -1
             self._has_steam_lock = False
