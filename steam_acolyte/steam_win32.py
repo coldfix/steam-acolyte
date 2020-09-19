@@ -1,4 +1,4 @@
-from .util import join_args, import_declarations
+from .util import join_args, import_declarations, Tracer
 
 from PyQt5.QtCore import QWinEventNotifier
 
@@ -37,6 +37,9 @@ winapi = SimpleNamespace(**import_declarations(windll.kernel32, wintypes, """
 """))
 
 
+trace = Tracer(__name__)
+
+
 class SteamWin32:
 
     """Windows specific methods for the interaction with steam. This implements
@@ -63,25 +66,31 @@ class SteamWin32:
     def find_exe(self):
         return reg.QueryValueEx(self._user_key, "SteamExe")[0]
 
+    @trace.method
     def get_last_user(self):
         return reg.QueryValueEx(self._user_key, "AutoLoginUser")[0]
 
+    @trace.method
     def set_last_user(self, username):
         reg.SetValueEx(self._user_key, "AutoLoginUser", 0, reg.REG_SZ, username)
         reg.SetValueEx(self._user_key, "RememberPassword", 0, reg.REG_DWORD, 1)
 
+    @trace.method
     def _is_steam_pid_valid(self):
         pid = reg.QueryValueEx(self._ipc_key, 'SteamPID')[0]
         return pid != 0 and is_process_running(pid)
 
+    @trace.method
     def _set_steam_pid(self):
         reg.SetValueEx(self._ipc_key, 'SteamPID', 0, reg.REG_DWORD, os.getpid())
 
+    @trace.method
     def _connect(self):
         self._event = winapi.OpenEventA(
             EVENT_MODIFY_STATE, False, self.EVENT_NAME)
         return bool(self._event)
 
+    @trace.method
     def _listen(self):
         self._has_steam_lock = True
         self._event = winapi.CreateEventA(
@@ -91,23 +100,27 @@ class SteamWin32:
         self._wait = QWinEventNotifier(self._event)
         self._wait.activated.connect(self._fetch)
 
+    @trace.method
     def _fetch(self):
         cmdl = reg.QueryValueEx(self._ipc_key, 'TempAppCmdLine')[0]
         reg.SetValueEx(self._ipc_key, 'TempAppCmdLine', 0, reg.REG_SZ, '')
         self.command_received.emit(cmdl)
 
+    @trace.method
     def _send(self, args):
         cmdl = join_args(args)
         reg.SetValueEx(self._ipc_key, 'TempAppCmdLine', 0, reg.REG_SZ, cmdl)
         if not winapi.SetEvent(self._event):
             raise WinError()
 
+    @trace.method
     def unlock(self):
         if self._event:
             winapi.CloseHandle(self._event)
             self._event = None
             self._has_steam_lock = False
 
+    @trace.method
     def ensure_single_acolyte_instance(self):
         """Ensure that we are the only acolyte instance."""
         if self._mutex is not None:
@@ -122,12 +135,14 @@ class SteamWin32:
         self._has_acolyte_lock = True
         return True
 
+    @trace.method
     def release_acolyte_instance_lock(self):
         if self._mutex:
             winapi.CloseHandle(self._mutex)
             self._mutex = None
             self._has_acolyte_lock = False
 
+    @trace.method
     def wait_for_steam_exit(self):
         """Wait until steam is closed."""
         pid = reg.QueryValueEx(self._ipc_key, 'SteamPID')[0]

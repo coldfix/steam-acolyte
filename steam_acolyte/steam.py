@@ -1,4 +1,4 @@
-from .util import read_file, write_file, subkey_lookup
+from .util import read_file, write_file, subkey_lookup, Tracer
 
 from PyQt5.QtCore import QObject, pyqtSignal, QProcess
 import vdf
@@ -14,6 +14,9 @@ if sys.platform == 'win32':
     from .steam_win32 import SteamWin32 as SteamImpl
 else:
     from .steam_linux import SteamLinux as SteamImpl
+
+
+trace = Tracer(__name__)
 
 
 class SteamUser:
@@ -104,6 +107,8 @@ class Steam(SteamImpl, SteamBase, QObject):
         self._has_acolyte_lock = False
         self._has_steam_lock = False
         self.command_received.connect(self._steam_cmdl_received)
+        trace('Init Steam(root=%r, exe=%r, logfile=%r, args=%r)',
+              self.root, self.exe, self.log, self.args)
 
     def __del__(self):
         self.unlock()
@@ -118,6 +123,7 @@ class Steam(SteamImpl, SteamBase, QObject):
         """Whether this instance has the steam lock."""
         return self._has_steam_lock
 
+    @trace.method
     def wait_for_lock(self):
         """Wait until steam has exited, and lock can be acquired. May be
         called only if we are the first acolyte instance."""
@@ -127,6 +133,7 @@ class Steam(SteamImpl, SteamBase, QObject):
                 self.unlock()
                 self.wait_for_steam_exit()
 
+    @trace.method
     def lock(self, args=None):
         """
         Engage in steam's single instance locking mechanism.
@@ -161,6 +168,7 @@ class Steam(SteamImpl, SteamBase, QObject):
                 return (True, True)
             sleep(0.050)
 
+    @trace.method
     def _steam_cmdl_received(self, line):
         """When steam is executed while we hold the steam instance lock, this
         function receives and stores steam's command line arguments."""
@@ -175,6 +183,7 @@ class Steam(SteamImpl, SteamBase, QObject):
             for uid, u in users.items()
         ]
 
+    @trace.method
     def store_login_cookie(self):
         """Save the login token from the last active steam account."""
         username = self.get_last_user()
@@ -190,12 +199,14 @@ class Steam(SteamImpl, SteamBase, QObject):
             print("Not replacing login data for logged out user: {!r}"
                   .format(username))
 
+    @trace.method
     def remove_login_cookie(self, username):
         """Delete saved login token."""
         userpath = os.path.join(self.root, 'acolyte', username, 'config.vdf')
         if os.path.isfile(userpath):
             os.remove(userpath)
 
+    @trace.method
     def remove_user(self, username):
         """Delete login token and remove account from the list of saved
         accounts."""
@@ -219,6 +230,7 @@ class Steam(SteamImpl, SteamBase, QObject):
         userpath = os.path.join(self.root, 'acolyte', username, 'config.vdf')
         return bool(username) and os.path.isfile(userpath)
 
+    @trace.method
     def switch_user(self, username):
         """Switch login config to given user. Do not use this while steam is
         running."""
@@ -234,6 +246,7 @@ class Steam(SteamImpl, SteamBase, QObject):
         copyfile(userpath, configpath)
         return True
 
+    @trace.method
     def run(self):
         """Run steam."""
         process = self._process = QProcess()
@@ -247,18 +260,21 @@ class Steam(SteamImpl, SteamBase, QObject):
         process.start(self.exe, self.args)
         return process
 
+    @trace.method
     def stop(self):
         """Signal steam to exit."""
         if not self.has_steam_lock():
             if self._is_steam_pid_valid() and self._connect():
                 self._send([self.exe, '-shutdown'])
 
+    @trace.method
     def read_config(self, filename='config.vdf'):
         """Read steam config.vdf file."""
         conf = os.path.join(self.root, 'config', filename)
         text = read_file(conf)
         return vdf.loads(text) if text else {}
 
+    @trace.method
     def write_config(self, filename, data):
         """Write steam config.vdf file."""
         conf = os.path.join(self.root, 'config', filename)

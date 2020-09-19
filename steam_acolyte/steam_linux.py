@@ -1,4 +1,5 @@
-from .util import read_file, write_file, join_args, subkey_lookup as lookup
+from .util import (
+    read_file, write_file, join_args, subkey_lookup as lookup, Tracer)
 
 import vdf
 from PyQt5.QtCore import QThread, pyqtSignal
@@ -6,6 +7,9 @@ from PyQt5.QtCore import QThread, pyqtSignal
 import fcntl
 import os
 from time import sleep
+
+
+trace = Tracer(__name__)
 
 
 class SteamLinux:
@@ -40,6 +44,7 @@ class SteamLinux:
         steam_config = lookup(reg_data, r'Registry\HKCU\Software\Valve\Steam')
         return steam_config.get('AutoLoginUser', '')
 
+    @trace.method
     def set_last_user(self, username):
         reg_file = os.path.expanduser('~/.steam/registry.vdf')
         reg_data = vdf.loads(read_file(reg_file))
@@ -64,6 +69,7 @@ class SteamLinux:
             return False
         return int(pidtext)
 
+    @trace.method
     def _set_steam_pid(self):
         pidfile = os.path.expanduser(self.PID_FILE)
         pidtext = str(os.getpid())
@@ -73,10 +79,12 @@ class SteamLinux:
     _pipe_fd = -1
     _thread = None
 
+    @trace.method
     def _connect(self):
         self._pipe_fd = self._open_pipe_for_writing(self.PIPE_FILE)
         return self._pipe_fd != -1
 
+    @trace.method
     def _listen(self):
         self._has_steam_lock = True
         self._pipe_fd = self._open_pipe_for_reading(self.PIPE_FILE)
@@ -85,10 +93,12 @@ class SteamLinux:
         self._thread.start()
         return True
 
+    @trace.method
     def _send(self, args):
         text = join_args(args) + '\n'
         os.write(self._pipe_fd, text.encode('utf-8'))
 
+    @trace.method
     def unlock(self):
         if self._thread is not None:
             self._thread.stop()
@@ -98,6 +108,7 @@ class SteamLinux:
             self._pipe_fd = -1
             self._has_steam_lock = False
 
+    @trace.method
     def ensure_single_acolyte_instance(self):
         """Ensure that we are the only acolyte instance. Return true if we are
         the first instance, false if another acolyte instance is running."""
@@ -114,12 +125,14 @@ class SteamLinux:
             self.release_acolyte_instance_lock()
             return False
 
+    @trace.method
     def release_acolyte_instance_lock(self):
         if self._lock_fd != -1:
             os.close(self._lock_fd)
             self._lock_fd = -1
             self._has_acolyte_lock = False
 
+    @trace.method
     def wait_for_steam_exit(self):
         """Wait until steam is closed."""
         # Unfortunately, we have to poll here because we can't os.wait() for
@@ -129,6 +142,7 @@ class SteamLinux:
         while is_process_running(pid):
             sleep(0.010)
 
+    @trace.method
     def _open_pipe_for_writing(self, name):
         """Open steam.pipe as a writer (client)."""
         mode = os.O_WRONLY | os.O_NONBLOCK
@@ -138,6 +152,7 @@ class SteamLinux:
         except OSError:
             return -1
 
+    @trace.method
     def _open_pipe_for_reading(self, name):
         """Open steam.pipe as a reader (server)."""
         path = os.path.expanduser(name)

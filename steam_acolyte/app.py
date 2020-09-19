@@ -10,6 +10,7 @@ Usage:
 Options:
     -r ROOT, --root ROOT        Steam root path
     -e EXE, --exe EXE           Set steam executable path and/or name
+    -v, --verbose               Increase verbosity (debug)
     -l FILE, --logfile FILE     Log steam output to this file
 """
 
@@ -21,12 +22,38 @@ from PyQt5.QtWidgets import QApplication
 
 from docopt import docopt
 
+import logging.config
 import sys
 
 
 def main(args=None):
     app = QApplication([])
     opts = docopt(__doc__, args, version=__version__)
+    level = 'DEBUG' if opts['--verbose'] else 'INFO'
+    logging.config.dictConfig({
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'plain':  {'format': '%(message)s'},
+            'detail': {'format': (
+                '%(levelname)s [%(asctime)s] %(name)s: %(message)s')},
+        },
+        'handlers': {
+            'error': {'class': 'logging.StreamHandler',
+                      'stream': 'ext://sys.stderr',
+                      'formatter': 'plain',
+                      'level': 'WARNING'},
+            'debug': {'class': 'logging.StreamHandler',
+                      'stream': 'ext://sys.stderr',
+                      'formatter': 'detail'},
+        },
+        # configure root logger:
+        'root': {
+            'handlers': ['debug' if opts['--verbose'] else 'error'],
+            'level': level,
+        },
+    })
+
     try:
         steam = Steam(opts['--root'], opts['--exe'], opts['--logfile'])
     except RuntimeError as e:

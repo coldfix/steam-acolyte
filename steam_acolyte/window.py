@@ -1,5 +1,6 @@
 from steam_acolyte.steam import SteamUser
 from steam_acolyte.async_ import AsyncTask
+from steam_acolyte.util import Tracer
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
@@ -14,6 +15,9 @@ try:                        # PyQt >= 5.11
     QueuedConnection = Qt.ConnectionType.QueuedConnection
 except AttributeError:      # PyQt < 5.11
     QueuedConnection = Qt.QueuedConnection
+
+
+trace = Tracer(__name__)
 
 
 class LoginDialog(QDialog):
@@ -56,7 +60,8 @@ class LoginDialog(QDialog):
             dump.deleteLater()
         self.setLayout(QVBoxLayout())
 
-    def wait_for_lock(self):
+    @trace.method
+    def wait_for_lock(self, *_):
         """Start waiting for the steam instance lock asynchronously, and
         show/activate the window when we acquire the lock."""
         if self._exit:
@@ -66,6 +71,7 @@ class LoginDialog(QDialog):
         self.wait_task.finished.connect(self._on_locked)
         self.wait_task.start()
 
+    @trace.method
     def _on_locked(self):
         """Executed when steam instance lock is acquired. Executes any queued
         login command, or activates the user list widget if no command was
@@ -83,6 +89,7 @@ class LoginDialog(QDialog):
             return
         self.show()
 
+    @trace.method
     def show_trayicon(self):
         """Create and show the tray icon."""
         self.trayicon = QSystemTrayIcon(self.theme.window_icon)
@@ -92,6 +99,7 @@ class LoginDialog(QDialog):
         self.trayicon.activated.connect(self.trayicon_clicked)
         self.trayicon.setContextMenu(self.createMenu())
 
+    @trace.method
     def hide_trayicon(self):
         """Hide and destroy the tray icon."""
         if self.trayicon is not None:
@@ -99,6 +107,7 @@ class LoginDialog(QDialog):
             self.trayicon.deleteLater()
             self.trayicon = None
 
+    @trace.method
     def trayicon_clicked(self, reason):
         """Activate window when tray icon is left-clicked."""
         if reason == QSystemTrayIcon.Trigger:
@@ -172,12 +181,14 @@ class LoginDialog(QDialog):
 
         menu.move(left, top)
 
+    @trace.method
     def exit_steam(self):
         """Send shutdown command to steam."""
         self.stopAction.setEnabled(False)
         self.steam.stop()
 
-    def _on_exit(self):
+    @trace.method
+    def _on_exit(self, *_):
         """Exit acolyte."""
         # We can't quit if steam is still running because QProcess would
         # terminate the child with us. In this case, we hide the trayicon and
@@ -191,6 +202,7 @@ class LoginDialog(QDialog):
             self.steam.unlock()
             self.steam.release_acolyte_instance_lock()
 
+    @trace.method
     def login(self, username):
         """
         Exit steam if open, and login the user with the given username.
@@ -201,6 +213,7 @@ class LoginDialog(QDialog):
             self._login = username
             self.exit_steam()
 
+    @trace.method
     def run_steam(self, username):
         """Run steam as the given user."""
         # Close and recreate after steam is finished. This serves two purposes:
@@ -213,6 +226,7 @@ class LoginDialog(QDialog):
         self.process = self.steam.run()
         self.process.finished.connect(self.wait_for_lock)
 
+    @trace.method
     def show_waiting_message(self):
         """If we are in the background, show waiting message as balloon."""
         if self.trayicon is not None:
