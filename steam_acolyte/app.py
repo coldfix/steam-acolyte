@@ -10,6 +10,7 @@ Usage:
 Options:
     -r ROOT, --root ROOT        Steam root path
     -e EXE, --exe EXE           Set steam executable path and/or name
+    -l FILE, --logfile FILE     Log steam output to this file
 """
 
 from steam_acolyte import __version__
@@ -27,7 +28,7 @@ def main(args=None):
     app = QApplication([])
     opts = docopt(__doc__, args, version=__version__)
     try:
-        steam = Steam(opts['--root'], opts['--exe'])
+        steam = Steam(opts['--root'], opts['--exe'], opts['--logfile'])
     except RuntimeError as e:
         print(e, file=sys.stderr)
         return 1

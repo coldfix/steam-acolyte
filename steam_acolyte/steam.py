@@ -95,10 +95,11 @@ class Steam(SteamImpl, SteamBase, QObject):
 
     command_received = pyqtSignal(str)
 
-    def __init__(self, root=None, exe=None, args=()):
+    def __init__(self, root=None, exe=None, log=None, args=()):
         super().__init__()
         self.root = root or self.find_root()
         self.exe = exe or self.find_exe()
+        self.log = log
         self.args = args
         self._has_acolyte_lock = False
         self._has_steam_lock = False
@@ -237,7 +238,12 @@ class Steam(SteamImpl, SteamBase, QObject):
         """Run steam."""
         process = self._process = QProcess()
         process.setInputChannelMode(QProcess.ForwardedInputChannel)
-        process.setProcessChannelMode(QProcess.ForwardedChannels)
+        if self.log:
+            process.setProcessChannelMode(QProcess.MergedChannels)
+            process.setStandardOutputFile(self.log)
+        else:
+            process.setProcessChannelMode(QProcess.ForwardedChannels)
+
         process.start(self.exe, self.args)
         return process
 
