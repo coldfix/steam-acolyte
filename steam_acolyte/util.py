@@ -1,5 +1,7 @@
 import re
 import shlex
+import logging
+from functools import wraps
 
 
 def read_file(filename):
@@ -62,3 +64,36 @@ def subkey_lookup(d, path):
                 d[entry] = {}
                 d = d[entry]
     return d
+
+
+class Tracer:
+
+    def __init__(self, name):
+        self.name = name
+
+    def __call__(self, *args, **kwargs):
+        logging.getLogger(self.name).debug(*args, **kwargs)
+
+    def method(self, fn):
+        """Trace a method call."""
+        def wrapper(*args, **kwargs):
+            obj, args = args[0], args[1:]
+            self('%s.%s(%s)',
+                 obj.__class__.__name__,
+                 fn.__name__,
+                 format_callargs(*args, **kwargs))
+            return fn(obj, *args, **kwargs)
+        return wraps(fn)(wrapper)
+
+
+def format_callargs(*args, **kwargs):
+    allargs = [short_repr(arg) for arg in args]
+    allargs += ['{}={}'.format(k, short_repr(v)) for k, v in kwargs.items()]
+    return ', '.join(allargs)
+
+
+def short_repr(val):
+    s = repr(val)
+    if len(s) > 30:
+        s = s[:5] + ' ... ' + s[:-5]
+    return s
