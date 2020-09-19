@@ -1,6 +1,16 @@
 CHANGES
 -------
 
+0.7.0
+~~~~~
+
+- bugfix: failing to restart steam, waiting indefinitely
+- add ``--logfile`` option to redirect steam output
+- add ``--verbose`` option to print debug messages
+- require pyinstaller 3.6
+- some internal code improvements
+
+
 0.6.3
 ~~~~~
 
