@@ -1,7 +1,7 @@
 import re
 import shlex
 import logging
-from functools import wraps
+from steam_acolyte.funcwrap import wraps
 
 
 def read_file(filename):
@@ -83,7 +83,10 @@ class Tracer:
                  fn.__name__,
                  format_callargs(*args, **kwargs))
             return fn(obj, *args, **kwargs)
-        return wraps(fn)(wrapper)
+        # Use `wrap` to preserve the signature exactly on the python syntax
+        # level. This is required to make pyqtsignal dispatch the same signal
+        # signature:
+        return wraps(fn, wrapper)
 
 
 def format_callargs(*args, **kwargs):

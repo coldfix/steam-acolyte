@@ -61,7 +61,7 @@ class LoginDialog(QDialog):
         self.setLayout(QVBoxLayout())
 
     @trace.method
-    def wait_for_lock(self, *_):
+    def wait_for_lock(self):
         """Start waiting for the steam instance lock asynchronously, and
         show/activate the window when we acquire the lock."""
         if self._exit:
@@ -182,13 +182,13 @@ class LoginDialog(QDialog):
         menu.move(left, top)
 
     @trace.method
-    def exit_steam(self, *_):
+    def exit_steam(self):
         """Send shutdown command to steam."""
         self.stopAction.setEnabled(False)
         self.steam.stop()
 
     @trace.method
-    def _on_exit(self, *_):
+    def _on_exit(self):
         """Exit acolyte."""
         # We can't quit if steam is still running because QProcess would
         # terminate the child with us. In this case, we hide the trayicon and
