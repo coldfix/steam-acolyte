@@ -1,6 +1,13 @@
 CHANGES
 -------
 
+0.7.1
+~~~~~
+
+- bugfix: exception when clicking "Exit Steam" menu item
+- bugfix: possible crash at program exit when closing via menu
+
+
 0.7.0
 ~~~~~
 
