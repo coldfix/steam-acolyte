@@ -125,7 +125,7 @@ class LoginDialog(QDialog):
         exit = QAction('&Quit', self)
         exit.setToolTip('Exit acolyte.')
         exit.setIcon(style.standardIcon(QStyle.SP_DialogCloseButton))
-        exit.triggered.connect(self._on_exit)
+        exit.triggered.connect(self._on_exit, QueuedConnection)
 
         self.newUserAction = make_user_action(
             self, SteamUser('', '', '', ''))
