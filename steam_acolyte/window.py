@@ -182,7 +182,7 @@ class LoginDialog(QDialog):
         menu.move(left, top)
 
     @trace.method
-    def exit_steam(self):
+    def exit_steam(self, *_):
         """Send shutdown command to steam."""
         self.stopAction.setEnabled(False)
         self.steam.stop()
