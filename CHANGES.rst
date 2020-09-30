@@ -1,6 +1,12 @@
 CHANGES
 -------
 
+0.7.2
+~~~~~
+
+- bugfix: another deadlock when stopping or restarting steam
+
+
 0.7.1
 ~~~~~
 
