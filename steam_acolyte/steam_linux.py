@@ -145,7 +145,7 @@ class SteamLinux:
         # non-child processes, and the alternatives using the ptrace, inotifyd
         # or netlink interfaces are much more involved.
         pid = self._read_steam_pid()
-        while is_process_running(pid):
+        while pid and is_process_running(pid):
             sleep(0.010)
 
     @trace.method

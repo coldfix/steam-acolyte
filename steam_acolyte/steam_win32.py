@@ -78,7 +78,7 @@ class SteamWin32:
     @trace.method
     def _is_steam_pid_valid(self):
         pid = reg.QueryValueEx(self._ipc_key, 'SteamPID')[0]
-        return pid != 0 and is_process_running(pid)
+        return pid and is_process_running(pid)
 
     @trace.method
     def _set_steam_pid(self):
