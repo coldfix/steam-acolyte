@@ -257,6 +257,11 @@ def make_user_action(window, user):
     action.triggered.connect(lambda: window.login(user.account_name))
     action.setToolTip("Login {}".format(
         user.account_name or "new account"))
+    action.setToolTip(
+        "Set this user as the last active login, "
+        "restore login token if available, "
+        "and start steam." if user.persona_name else
+        "Start steam login dialog to enter a different user account.")
     action.setIcon(QIcon(
         theme.user_icon if user.account_name else theme.plus_icon))
     return action
@@ -300,10 +305,15 @@ class UserWidget(ButtonWidget):
         self.logout_action.triggered.connect(self.logout_clicked)
         self.logout_action.setIcon(self.theme.logout_icon)
         self.logout_action.setToolTip("Delete saved login")
+        self.logout_action.setWhatsThis(
+            "Logout user by deleting the saved login token.\n"
+            "The user will stay visible on this list.")
         self.delete_action = QAction()
         self.delete_action.triggered.connect(self.delete_clicked)
         self.delete_action.setIcon(theme.delete_icon)
         self.delete_action.setToolTip("Delete user from list")
+        self.delete_action.setWhatsThis(
+            "Logout and remove user from this list.")
         self.logout_button = QToolButton()
         self.logout_button.setDefaultAction(self.logout_action)
         self.delete_button = QToolButton()
