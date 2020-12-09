@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=acolyte
+Version={{VERSION}}
+Comment=Steam account manager
+Exec=steam-acolyte
+Icon=acolyte
+Terminal=false
+Type=Application
+Categories=Game;
+MimeType=x-scheme-handler/steam;
