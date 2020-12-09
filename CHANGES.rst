@@ -1,6 +1,12 @@
 CHANGES
 -------
 
+0.7.4
+~~~~~
+
+- package: fix bug in AUR package
+
+
 0.7.3
 ~~~~~
 
