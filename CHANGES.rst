@@ -1,6 +1,12 @@
 CHANGES
 -------
 
+0.7.3
+~~~~~
+
+- package: add .desktop entry to AUR package
+
+
 0.7.2
 ~~~~~
 
