@@ -1,6 +1,5 @@
 [Desktop Entry]
 Name=acolyte
-Version={{VERSION}}
 Comment=Steam account manager
 Exec=steam-acolyte
 Icon=acolyte

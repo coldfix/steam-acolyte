@@ -32,26 +32,20 @@ jobs:
       - name: Insert version in acolyte.desktop
         run: |
           VERSION=$(python -c 'import steam_acolyte as s;print(s.__version__)')
-          sed -i acolyte.desktop -e "s/{{VERSION}}/$VERSION/"
-          cat acolyte.desktop
+          echo "Version=$VERSION" >> acolyte.desktop
+
       - run: python setup.py sdist bdist_wheel
       - run: python -m pip install dist/*.whl
       - run: twine check dist/*
       - run: flake8
 
-      - name: Extract release info
-        id: release
+      - name: Generate PKGBUILD
         run: |
           MD5SUM=$(md5sum dist/*.tar.gz | cut -d ' ' -f1)
           VERSION=$(python -c 'import steam_acolyte as s;print(s.__version__)')
-          echo "::set-output name=version::$VERSION"
-          echo "::set-output name=md5sum::$MD5SUM"
-
-      - name: Generate PKGBUILD
-        run: |
           sed .github/PKGBUILD >dist/PKGBUILD \
-            -e "s/{{VERSION}}/${{ steps.release.outputs.version }}/" \
-            -e "s/{{MD5SUM}}/${{ steps.release.outputs.md5sum }}/"
+            -e "s/{{VERSION}}/$VERSION/" \
+            -e "s/{{MD5SUM}}/$MD5SUM/"
           cat dist/PKGBUILD
 
       - uses: actions/upload-artifact@v2
