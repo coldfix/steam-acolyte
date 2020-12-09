@@ -15,8 +15,6 @@ md5sums=('{{MD5SUM}}')
 build() {
     cd "$srcdir/$pkgname-$pkgver"
     python setup.py build
-
-    sed -i acolyte.desktop -e "s/{{VERSION}}/$pkgver/"
 }
 
 package() {
