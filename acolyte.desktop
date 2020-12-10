@@ -1,6 +1,6 @@
 [Desktop Entry]
-Name=acolyte
-Comment=Steam account manager
+Name=Steam Acolyte
+Comment=Steam Account Manager
 Exec=steam-acolyte
 Icon=acolyte
 Terminal=false
