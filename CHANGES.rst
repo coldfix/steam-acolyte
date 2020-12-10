@@ -1,6 +1,12 @@
 CHANGES
 -------
 
+0.7.5
+~~~~~
+
+- package: fix unexpanded version in desktop file in AUR package
+
+
 0.7.4
 ~~~~~
 
