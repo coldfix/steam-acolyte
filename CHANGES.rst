@@ -1,6 +1,16 @@
 CHANGES
 -------
 
+0.7.6
+~~~~~
+Date: 30.01.2021
+
+- add workaround for trayicon not showing in plasma (#8)
+- AUR package: fix incorrect usage of Version entry in desktop file
+- AUR package: install desktop icon to /usr/share/pixmaps
+- AUR package: rename desktop app to "Steam Acolyte"
+
+
 0.7.5
 ~~~~~
 
