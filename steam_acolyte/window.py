@@ -92,7 +92,12 @@ class LoginDialog(QDialog):
     @trace.method
     def show_trayicon(self):
         """Create and show the tray icon."""
-        self.trayicon = QSystemTrayIcon(self.theme.window_icon)
+        # The conversion to QPixmap and back to QIcon is needed to prevent a
+        # bug that leads to the icon not being displayed in plasma. See:
+        # - https://github.com/coldfix/steam-acolyte/issues/8
+        # - https://bugreports.qt.io/browse/QTBUG-53550
+        icon = QIcon(self.theme.window_icon.pixmap(64))
+        self.trayicon = QSystemTrayIcon(icon)
         self.trayicon.setVisible(True)
         self.trayicon.setToolTip(
             "acolyte - lightweight steam account manager")
