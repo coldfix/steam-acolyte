@@ -1,6 +1,13 @@
 CHANGES
 -------
 
+0.7.7
+~~~~~
+Date: 27.04.2021
+
+- fix exception due to case-sensitive handling of steam config files (#10)
+
+
 0.7.6
 ~~~~~
 Date: 30.01.2021
