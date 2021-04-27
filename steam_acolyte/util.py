@@ -59,7 +59,7 @@ def subkey_lookup(d, path):
         else:
             ld = {k.lower(): v for k, v in d.items()}
             if entry.lower() in ld:
-                d = ld[entry]
+                d = ld[entry.lower()]
             else:
                 d[entry] = {}
                 d = d[entry]
