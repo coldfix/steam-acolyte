@@ -2,6 +2,8 @@ name: Python Package
 on:
   push:
   pull_request:
+  schedule:
+    - cron: '35  3  *  *  6'
 
 jobs:
   build:
