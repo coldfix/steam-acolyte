@@ -4,7 +4,7 @@ import logging
 from steam_acolyte.funcwrap import wraps
 import sys
 
-SYSTEM_ENCODING = sys.getdefaultencoding() 
+SYSTEM_ENCODING = sys.getdefaultencoding()
 
 
 def read_file(filename):
