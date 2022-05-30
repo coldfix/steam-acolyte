@@ -7,7 +7,7 @@ from steam_acolyte.funcwrap import wraps
 def read_file(filename):
     """Read full contents of given file."""
     try:
-        with open(filename) as f:
+        with open(filename, encoding='utf-8') as f:
             return f.read()
     except FileNotFoundError:
         return ''
