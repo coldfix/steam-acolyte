@@ -25,7 +25,7 @@ Install the latest version from PyPI::
 
     pip install --user steam-acolyte
 
-If you want this application to live independently from other python packages,
+**Alternatively**, if you want this application to live independently from other python packages,
 I recommend using pipx_ rather than *pip*::
 
     pip install --user pipx
