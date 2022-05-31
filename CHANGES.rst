@@ -1,6 +1,14 @@
 CHANGES
 -------
 
+0.7.8
+~~~~~
+Date: 31.05.2022
+
+- fix UnicodeDecodeError on systems with a preferred encoding different from
+  UTF-8 (#13)
+
+
 0.7.7
 ~~~~~
 Date: 27.04.2021
