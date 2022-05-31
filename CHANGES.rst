@@ -1,6 +1,14 @@
 CHANGES
 -------
 
+
+0.7.9
+~~~~~
+Date: 31.05.2022
+
+- new build to trigger deployment after fixing AUR deployment
+
+
 0.7.8
 ~~~~~
 Date: 31.05.2022
