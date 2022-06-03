@@ -27,7 +27,7 @@ class SteamLinux:
     @classmethod
     def find_root(cls):
         # I tested this on archlinux and ubuntu, not sure it works everywhere:
-        root = os.path.expanduser('~/.steam/steam')
+        root = os.path.expanduser('~/.var/app/com.valvesoftware.Steam/.steam/steam/')
         conf = os.path.join(root, 'config', 'config.vdf')
         if not os.path.isfile(conf):
             raise RuntimeError("""Unable to find steam user path!""")
@@ -35,10 +35,10 @@ class SteamLinux:
 
     @classmethod
     def find_exe(cls):
-        return 'steam'
+        return 'com.valvesoftware.Steam'
 
     def get_last_user(self):
-        reg_file = os.path.expanduser('~/.steam/registry.vdf')
+        reg_file = os.path.expanduser('~/.var/app/com.valvesoftware.Steam/.steam/registry.vdf')
         reg_data = vdf.loads(read_file(reg_file))
         steam_config = subkey_lookup(
             reg_data, r'Registry\HKCU\Software\Valve\Steam')
@@ -46,7 +46,7 @@ class SteamLinux:
 
     @trace.method
     def set_last_user(self, username):
-        reg_file = os.path.expanduser('~/.steam/registry.vdf')
+        reg_file = os.path.expanduser('~/.var/app/com.valvesoftware.Steam/.steam/registry.vdf')
         reg_data = vdf.loads(read_file(reg_file))
         steam_config = subkey_lookup(
             reg_data, r'Registry\HKCU\Software\Valve\Steam')
@@ -56,8 +56,8 @@ class SteamLinux:
         with open(reg_file, 'wt') as f:
             f.write(reg_data)
 
-    PID_FILE = '~/.steam/steam.pid'
-    PIPE_FILE = '~/.steam/steam.pipe'
+    PID_FILE = '~/.var/app/com.valvesoftware.Steam/.steam/steam.pid'
+    PIPE_FILE = '~/.var/app/com.valvesoftware.Steam/.steam/steam.pipe'
 
     def _is_steam_pid_valid(self):
         """Check if the steam.pid file designates a running process."""
