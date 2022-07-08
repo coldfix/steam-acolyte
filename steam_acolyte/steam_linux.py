@@ -24,20 +24,25 @@ class SteamLinux:
     #   config    ~/.steam/steam@   ->  ~/.steam/steam    ~/.local/share/Steam
     #   data      ~/.steam/root@    ->  ~/.steam          ~/.local/share/Steam
 
-    def __init__(self, root=None, exe=None):
+    def __init__(self, prefix=None, root=None, exe=None):
         super().__init__()
-        self.root = root or self.find_root()
+        self.prefix = prefix or self.find_prefix()
+        self.root = root or self.find_root(self.prefix)
         self.exe = exe or self.find_exe()
         self.steam_config = os.path.join(self.root, 'config')
         self.acolyte_data = os.path.join(self.root, 'acolyte')
-        self.reg_file = os.path.expanduser('~/.steam/registry.vdf')
-        self.pid_file = os.path.expanduser('~/.steam/steam.pid')
-        self.pipe_file = os.path.expanduser('~/.steam/steam.pipe')
+        self.reg_file = os.path.join(self.prefix, 'registry.vdf')
+        self.pid_file = os.path.join(self.prefix, 'steam.pid')
+        self.pipe_file = os.path.join(self.prefix, 'steam.pipe')
 
     @classmethod
-    def find_root(cls):
+    def find_prefix(cls):
+        return os.path.expanduser('~/.steam')
+
+    @classmethod
+    def find_root(cls, prefix):
         # I tested this on archlinux and ubuntu, not sure it works everywhere:
-        root = os.path.expanduser('~/.steam/steam')
+        root = os.path.join(prefix, 'steam')
         conf = os.path.join(root, 'config', 'config.vdf')
         if not os.path.isfile(conf):
             raise RuntimeError("""Unable to find steam user path!""")

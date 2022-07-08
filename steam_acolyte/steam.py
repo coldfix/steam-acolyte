@@ -34,13 +34,14 @@ class SteamBase:
     specific implementations (SteamLinux/SteamWin32)."""
 
     # Paths that must be set by __init__:
+    prefix: str
     root: str
     exe: str
     steam_config: str
     acolyte_data: str
 
     @abstractmethod
-    def __init__(self, root=None, exe=None):
+    def __init__(self, prefix=None, root=None, exe=None):
         """Locate and set paths of steam installation and acolyte data."""
         super().__init__()
 
@@ -105,15 +106,15 @@ class Steam(SteamImpl, SteamBase, QObject):
 
     command_received = pyqtSignal(str)
 
-    def __init__(self, root=None, exe=None, log=None, args=()):
-        super().__init__(root, exe)
+    def __init__(self, prefix=None, root=None, exe=None, log=None, args=()):
+        super().__init__(prefix, root, exe)
         self.log = log
         self.args = args
         self._has_acolyte_lock = False
         self._has_steam_lock = False
         self.command_received.connect(self._steam_cmdl_received)
-        trace('Init Steam(root=%r, exe=%r, logfile=%r, args=%r)',
-              self.root, self.exe, self.log, self.args)
+        trace('Init Steam(prefix=%r, root=%r, exe=%r, logfile=%r, args=%r)',
+              self.prefix, self.root, self.exe, self.log, self.args)
 
     def __del__(self):
         self.unlock()

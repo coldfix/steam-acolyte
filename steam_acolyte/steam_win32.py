@@ -51,11 +51,16 @@ class SteamWin32:
     _event = None
     _mutex = None
 
-    def __init__(self, root=None, exe=None):
+    def __init__(self, prefix=None, root=None, exe=None):
         super().__init__()
         self._user_key = reg.CreateKey(reg.HKEY_CURRENT_USER, self.USER_KEY)
         self._ipc_key = reg.CreateKey(reg.HKEY_LOCAL_MACHINE, self.IPC_KEY)
-        self.root = root or self.find_root()
+        if prefix and root and prefix != root:
+            raise RuntimeError(
+                "There is no distinction between --prefix and --root on "
+                "windows. Please pass only --prefix!")
+        self.prefix = prefix or root or self.find_root()
+        self.root = self.prefix
         self.exe = exe or self.find_exe()
         self.steam_config = os.path.join(self.root, 'config')
         self.acolyte_data = os.path.join(self.root, 'acolyte')
