@@ -24,6 +24,16 @@ class SteamLinux:
     #   config    ~/.steam/steam@   ->  ~/.steam/steam    ~/.local/share/Steam
     #   data      ~/.steam/root@    ->  ~/.steam          ~/.local/share/Steam
 
+    def __init__(self, root=None, exe=None):
+        super().__init__()
+        self.root = root or self.find_root()
+        self.exe = exe or self.find_exe()
+        self.steam_config = os.path.join(self.root, 'config')
+        self.acolyte_data = os.path.join(self.root, 'acolyte')
+        self.reg_file = os.path.expanduser('~/.steam/registry.vdf')
+        self.pid_file = os.path.expanduser('~/.steam/steam.pid')
+        self.pipe_file = os.path.expanduser('~/.steam/steam.pipe')
+
     @classmethod
     def find_root(cls):
         # I tested this on archlinux and ubuntu, not sure it works everywhere:
@@ -38,33 +48,28 @@ class SteamLinux:
         return 'steam'
 
     def get_last_user(self):
-        reg_file = os.path.expanduser('~/.steam/registry.vdf')
-        reg_data = vdf.loads(read_file(reg_file))
+        reg_data = vdf.loads(read_file(self.reg_file))
         steam_config = subkey_lookup(
             reg_data, r'Registry\HKCU\Software\Valve\Steam')
         return steam_config.get('AutoLoginUser', '')
 
     @trace.method
     def set_last_user(self, username):
-        reg_file = os.path.expanduser('~/.steam/registry.vdf')
-        reg_data = vdf.loads(read_file(reg_file))
+        reg_data = vdf.loads(read_file(self.reg_file))
         steam_config = subkey_lookup(
             reg_data, r'Registry\HKCU\Software\Valve\Steam')
         steam_config['AutoLoginUser'] = username
         steam_config['RememberPassword'] = '1'
         reg_data = vdf.dumps(reg_data, pretty=True)
-        with open(reg_file, 'wt') as f:
+        with open(self.reg_file, 'wt') as f:
             f.write(reg_data)
-
-    PID_FILE = '~/.steam/steam.pid'
-    PIPE_FILE = '~/.steam/steam.pipe'
 
     def _is_steam_pid_valid(self):
         """Check if the steam.pid file designates a running process."""
         return is_process_running(self._read_steam_pid())
 
     def _read_steam_pid(self):
-        pidfile = os.path.expanduser(self.PID_FILE)
+        pidfile = os.path.expanduser(self.pid_file)
         pidtext = read_file(pidfile)
         if not pidtext:
             return False
@@ -72,13 +77,13 @@ class SteamLinux:
 
     @trace.method
     def _set_steam_pid(self):
-        pidfile = os.path.expanduser(self.PID_FILE)
+        pidfile = os.path.expanduser(self.pid_file)
         pidtext = str(os.getpid())
         write_file(pidfile, pidtext)
 
     @trace.method
     def _unset_steam_pid(self):
-        pidfile = os.path.expanduser(self.PID_FILE)
+        pidfile = os.path.expanduser(self.pid_file)
         write_file(pidfile, '')
 
     _lock_fd = -1
@@ -87,13 +92,13 @@ class SteamLinux:
 
     @trace.method
     def _connect(self):
-        self._pipe_fd = self._open_pipe_for_writing(self.PIPE_FILE)
+        self._pipe_fd = self._open_pipe_for_writing(self.pipe_file)
         return self._pipe_fd != -1
 
     @trace.method
     def _listen(self):
         self._has_steam_lock = True
-        self._pipe_fd = self._open_pipe_for_reading(self.PIPE_FILE)
+        self._pipe_fd = self._open_pipe_for_reading(self.pipe_file)
         self._thread = FileReaderThread(self._pipe_fd)
         self._thread.line_received.connect(self.command_received.emit)
         self._thread.start()
@@ -121,7 +126,7 @@ class SteamLinux:
         the first instance, false if another acolyte instance is running."""
         if self._lock_fd != -1:
             return True
-        pid_file = os.path.join(self.root, 'acolyte', 'acolyte.lock')
+        pid_file = os.path.join(self.acolyte_data, 'acolyte.lock')
         os.makedirs(os.path.dirname(pid_file), exist_ok=True)
         self._lock_fd = os.open(pid_file, os.O_WRONLY | os.O_CREAT, 0o644)
         try:
