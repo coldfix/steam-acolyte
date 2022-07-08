@@ -1,4 +1,7 @@
-from .util import read_file, write_file, join_args, subkey_lookup, Tracer
+from .util import (
+    read_file, write_file, join_args, subkey_lookup, Tracer,
+    realpath, find_exe,
+)
 
 import vdf
 from PyQt5.QtCore import QThread, pyqtSignal
@@ -26,14 +29,19 @@ class SteamLinux:
 
     def __init__(self, prefix=None, root=None, exe=None):
         super().__init__()
-        self.prefix = prefix or self.find_prefix()
-        self.root = root or self.find_root(self.prefix)
-        self.exe = exe or self.find_exe()
+        self.prefix = realpath(prefix or self.find_prefix())
+        self.root = realpath(root or self.find_root(self.prefix))
+        self.exe = find_exe(exe or self.find_exe())
         self.steam_config = os.path.join(self.root, 'config')
         self.acolyte_data = os.path.join(self.root, 'acolyte')
         self.reg_file = os.path.join(self.prefix, 'registry.vdf')
         self.pid_file = os.path.join(self.prefix, 'steam.pid')
         self.pipe_file = os.path.join(self.prefix, 'steam.pipe')
+        if not self.exe:
+            raise RuntimeError(
+                "Unable to find steam executable! If your steam installation "
+                "is feeling special, verify that you have passed '--exe' "
+                "correctly!")
 
     @classmethod
     def find_prefix(cls):

@@ -1,7 +1,19 @@
+import os
 import re
 import shlex
+import shutil
 import logging
 from steam_acolyte.funcwrap import wraps
+
+
+def realpath(path):
+    """Expand home directory and canonicalize path."""
+    return os.path.realpath(os.path.expanduser(path))
+
+
+def find_exe(name):
+    """Find executable."""
+    return shutil.which(os.path.expanduser(name))
 
 
 def read_file(filename):
