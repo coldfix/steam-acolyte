@@ -6,9 +6,19 @@ import logging
 from steam_acolyte.funcwrap import wraps
 
 
+def samefile(a, b) -> bool:
+    """Check if two paths represent the same file."""
+    try:
+        return os.path.samefile(
+            os.path.expanduser(a),
+            os.path.expanduser(b))
+    except (OSError, TypeError):
+        return False
+
+
 def realpath(path):
     """Expand home directory and canonicalize path."""
-    return os.path.realpath(os.path.expanduser(path))
+    return path and os.path.realpath(os.path.expanduser(path))
 
 
 def find_exe(name):
