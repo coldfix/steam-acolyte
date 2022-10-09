@@ -33,13 +33,17 @@ class SteamBase:
     """This defines the methods that need to be provided by the platform
     specific implementations (SteamLinux/SteamWin32)."""
 
-    @abstractmethod
-    def find_root(cls):
-        """Locate and return the root path for the steam user config."""
+    # Paths that must be set by __init__:
+    prefix: str
+    root: str
+    exe: str
+    steam_config: str
+    acolyte_data: str
 
     @abstractmethod
-    def find_exe(cls):
-        """Return name of the steam executable."""
+    def __init__(self, prefix=None, root=None, exe=None):
+        """Locate and set paths of steam installation and acolyte data."""
+        super().__init__()
 
     @abstractmethod
     def get_last_user(self):
@@ -102,17 +106,15 @@ class Steam(SteamImpl, SteamBase, QObject):
 
     command_received = pyqtSignal(str)
 
-    def __init__(self, root=None, exe=None, log=None, args=()):
-        super().__init__()
-        self.root = root or self.find_root()
-        self.exe = exe or self.find_exe()
+    def __init__(self, prefix=None, root=None, exe=None, log=None, args=()):
+        super().__init__(prefix, root, exe)
         self.log = log
         self.args = args
         self._has_acolyte_lock = False
         self._has_steam_lock = False
         self.command_received.connect(self._steam_cmdl_received)
-        trace('Init Steam(root=%r, exe=%r, logfile=%r, args=%r)',
-              self.root, self.exe, self.log, self.args)
+        trace('Init Steam(prefix=%r, root=%r, exe=%r, logfile=%r, args=%r)',
+              self.prefix, self.root, self.exe, self.log, self.args)
 
     def __del__(self):
         self.unlock()
@@ -196,8 +198,8 @@ class Steam(SteamImpl, SteamBase, QObject):
     def store_login_cookie(self):
         """Save the login token from the last active steam account."""
         username = self.get_last_user()
-        userpath = os.path.join(self.root, 'acolyte', username, 'config.vdf')
-        configpath = os.path.join(self.root, 'config', 'config.vdf')
+        userpath = os.path.join(self.acolyte_data, username, 'config.vdf')
+        configpath = os.path.join(self.steam_config, 'config.vdf')
         config = self.read_config('config.vdf')
         accounts = subkey_lookup(
             config, r'InstallConfigStore\Software\Valve\Steam\Accounts')
@@ -211,7 +213,7 @@ class Steam(SteamImpl, SteamBase, QObject):
     @trace.method
     def remove_login_cookie(self, username):
         """Delete saved login token."""
-        userpath = os.path.join(self.root, 'acolyte', username, 'config.vdf')
+        userpath = os.path.join(self.acolyte_data, username, 'config.vdf')
         if os.path.isfile(userpath):
             os.remove(userpath)
 
@@ -236,7 +238,7 @@ class Steam(SteamImpl, SteamBase, QObject):
 
     def has_cookie(self, username):
         """Check if there is a saved login cookie."""
-        userpath = os.path.join(self.root, 'acolyte', username, 'config.vdf')
+        userpath = os.path.join(self.acolyte_data, username, 'config.vdf')
         return bool(username) and os.path.isfile(userpath)
 
     @trace.method
@@ -246,8 +248,8 @@ class Steam(SteamImpl, SteamBase, QObject):
         self.set_last_user(username)
         if not username:
             return True
-        userpath = os.path.join(self.root, 'acolyte', username, 'config.vdf')
-        configpath = os.path.join(self.root, 'config', 'config.vdf')
+        userpath = os.path.join(self.acolyte_data, username, 'config.vdf')
+        configpath = os.path.join(self.steam_config, 'config.vdf')
         if not os.path.isfile(userpath):
             print("No stored config found for {!r}".format(username),
                   file=sys.stderr)
@@ -279,13 +281,13 @@ class Steam(SteamImpl, SteamBase, QObject):
     @trace.method
     def read_config(self, filename='config.vdf'):
         """Read steam config.vdf file."""
-        conf = os.path.join(self.root, 'config', filename)
+        conf = os.path.join(self.steam_config, filename)
         text = read_file(conf)
         return vdf.loads(text) if text else {}
 
     @trace.method
     def write_config(self, filename, data):
         """Write steam config.vdf file."""
-        conf = os.path.join(self.root, 'config', filename)
+        conf = os.path.join(self.steam_config, filename)
         text = vdf.dumps(data, pretty=True)
         write_file(conf, text)

@@ -1,4 +1,4 @@
-from .util import join_args, import_declarations, Tracer
+from .util import join_args, import_declarations, Tracer, realpath, find_exe
 
 from PyQt5.QtCore import QWinEventNotifier
 
@@ -51,10 +51,24 @@ class SteamWin32:
     _event = None
     _mutex = None
 
-    def __init__(self):
+    def __init__(self, prefix=None, root=None, exe=None):
         super().__init__()
         self._user_key = reg.CreateKey(reg.HKEY_CURRENT_USER, self.USER_KEY)
         self._ipc_key = reg.CreateKey(reg.HKEY_LOCAL_MACHINE, self.IPC_KEY)
+        if prefix and root and prefix != root:
+            raise RuntimeError(
+                "There is no distinction between --prefix and --root on "
+                "windows. Please pass only --prefix!")
+        self.prefix = realpath(prefix or root or self.find_root())
+        self.root = self.prefix
+        self.exe = find_exe(exe or self.find_exe())
+        self.steam_config = os.path.join(self.root, 'config')
+        self.acolyte_data = os.path.join(self.root, 'acolyte')
+        if not self.exe:
+            raise RuntimeError(
+                "Unable to find steam executable! If your steam installation "
+                "is feeling special, verify that you have passed '--exe' "
+                "correctly!")
 
     def __del__(self):
         self._user_key.Close()

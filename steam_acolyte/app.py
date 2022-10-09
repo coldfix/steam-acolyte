@@ -8,9 +8,23 @@ Usage:
     steam-acolyte [options] start <USER>
 
 Options:
-    -r ROOT, --root ROOT        Steam root path
+    -p PREFIX, --prefix PREFIX  Steam prefix (e.g. `~/.steam`). On linux, this
+                                folder should contain files `registry.vdf`,
+                                `steam.pid`, `steam.pipe`. On windows, it is
+                                simply the steam program folder.
+
+    -r ROOT, --root ROOT        Steam config root. On linux, defaults to
+                                `PREFIX/steam`. On windows this is the same as
+                                `PREFIX`. In both cases, this folder should
+                                contain a subfolder `config` with files
+                                `config.vdf` and `loginusers.vdf`.
+                                Usually, you don't need to change this path as
+                                it will be set automatically from --prefix.
+
     -e EXE, --exe EXE           Set steam executable path and/or name
+
     -v, --verbose               Increase verbosity (debug)
+
     -l FILE, --logfile FILE     Log steam output to this file
 """
 
@@ -55,7 +69,11 @@ def main(args=None):
     })
 
     try:
-        steam = Steam(opts['--root'], opts['--exe'], opts['--logfile'])
+        steam = Steam(
+            opts['--prefix'],
+            opts['--root'],
+            opts['--exe'],
+            opts['--logfile'])
     except RuntimeError as e:
         print(e, file=sys.stderr)
         return 1

@@ -1,4 +1,7 @@
-from .util import read_file, write_file, join_args, subkey_lookup, Tracer
+from .util import (
+    read_file, write_file, join_args, subkey_lookup, Tracer,
+    realpath, find_exe, samefile,
+)
 
 import vdf
 from PyQt5.QtCore import QThread, pyqtSignal
@@ -6,9 +9,35 @@ from PyQt5.QtCore import QThread, pyqtSignal
 import fcntl
 import os
 from time import sleep
+import logging
 
 
 trace = Tracer(__name__)
+
+# I tested this script on an ubuntu and archlinux machine, where I found
+# the steam config and program files in different locations. In both cases
+# there was also a path/symlink that pointed to the correct location:
+#
+#             common name           ubuntu            archlinux
+#   config    ~/.steam/steam@   ->  ~/.steam/steam    ~/.local/share/Steam
+#   data      ~/.steam/root@    ->  ~/.steam          ~/.local/share/Steam
+CONFIGS = {
+    'DEFAULT': {
+        'exe': 'steam',
+        'prefix': '~/.steam',
+        'root': '~/.steam/steam',
+    },
+    'NATIVE': {
+        'exe': 'steam-native',
+        'prefix': '~/.steam',
+        'root': '~/.steam/steam',
+    },
+    'FLATPACK': {
+        'exe': 'com.valvesoftware.Steam',
+        'prefix': '~/.var/app/com.valvesoftware.Steam/.steam',
+        'root': '~/.var/app/com.valvesoftware.Steam/steam',
+    },
+}
 
 
 class SteamLinux:
@@ -16,55 +45,113 @@ class SteamLinux:
     """Linux specific methods for the interaction with steam. This implements
     the SteamBase interface and is used as a mixin for Steam."""
 
-    # I tested this script on an ubuntu and archlinux machine, where I found
-    # the steam config and program files in different locations. In both cases
-    # there was also a path/symlink that pointed to the correct location:
-    #
-    #             common name           ubuntu            archlinux
-    #   config    ~/.steam/steam@   ->  ~/.steam/steam    ~/.local/share/Steam
-    #   data      ~/.steam/root@    ->  ~/.steam          ~/.local/share/Steam
+    def __init__(self, prefix=None, root=None, exe=None):
+        super().__init__()
+        self.prefix = realpath(prefix or self.find_prefix(root, exe))
+        self.root = realpath(root or self.find_root(self.prefix))
+        self.exe = find_exe(exe or self.find_exe(self.prefix))
+        self.steam_config = os.path.join(self.root, 'config')
+        self.acolyte_data = os.path.join(self.root, 'acolyte')
+        self.reg_file = os.path.join(self.prefix, 'registry.vdf')
+        self.pid_file = os.path.join(self.prefix, 'steam.pid')
+        self.pipe_file = os.path.join(self.prefix, 'steam.pipe')
+        if not self.exe:
+            raise RuntimeError(
+                "Unable to find steam executable! If your steam installation "
+                "is feeling special, verify that you have passed '--exe' "
+                "correctly!")
 
     @classmethod
-    def find_root(cls):
-        # I tested this on archlinux and ubuntu, not sure it works everywhere:
-        root = os.path.expanduser('~/.steam/steam')
+    def find_prefix(cls, root, exe):
+        if root:
+            logging.getLogger(__name__).warning(
+                "Please pass '--prefix' in addition to, or instead of, "
+                "'--root'. There is no reliable way to determine PREFIX from "
+                "ROOT.")
+            # Try anyway…
+            root = os.path.expanduser(root)
+            prefixes = [
+                # <prefix>/steam@ -> <root>
+                os.path.normpath(os.path.join(root, '..')),
+                # <prefix>/steam = <root>
+                os.path.realpath(os.path.join(root, '..')),
+                # <prefix>/steam@ -> <root> = <prefix>/../.local/share/Steam
+                os.path.normpath(os.path.join(root, '../../../.steam')),
+            ]
+            for prefix in prefixes:
+                if cls._prefix_exists(prefix):
+                    return prefix
+
+        elif exe:
+            exe = find_exe(exe)
+            for cfg in CONFIGS.values():
+                if samefile(exe, find_exe(cfg['exe'])):
+                    prefix = os.path.expanduser(cfg['prefix'])
+                    if cls._prefix_exists(prefix):
+                        return prefix
+
+        else:
+            for cfg in CONFIGS.values():
+                exe = find_exe(cfg['exe'])
+                if exe:
+                    prefix = os.path.expanduser(cfg['prefix'])
+                    if cls._prefix_exists(prefix):
+                        return prefix
+
+        raise RuntimeError(
+            "Unable to find steam user path! Please pass --prefix pointing "
+            "to the folder containing the registry.vdf file.")
+
+    @classmethod
+    def _prefix_exists(cls, prefix):
+        return os.path.exists(os.path.join(prefix, 'registry.vdf'))
+
+    @classmethod
+    def find_root(cls, prefix):
+        root = os.path.join(prefix, 'steam')
         conf = os.path.join(root, 'config', 'config.vdf')
         if not os.path.isfile(conf):
             raise RuntimeError("""Unable to find steam user path!""")
         return root
 
     @classmethod
-    def find_exe(cls):
-        return 'steam'
+    def find_exe(cls, prefix):
+        if not prefix:
+            raise RuntimeError("Unable to find steam user path!")
+
+        for cfg in CONFIGS.values():
+            if samefile(prefix, cfg['prefix']):
+                exe = find_exe(cfg['exe'])
+                if exe:
+                    return exe
+
+        # TODO: we could also check <prefix>/bin/steam
+
+        raise RuntimeError("Unable to find steam executable!")
 
     def get_last_user(self):
-        reg_file = os.path.expanduser('~/.steam/registry.vdf')
-        reg_data = vdf.loads(read_file(reg_file))
+        reg_data = vdf.loads(read_file(self.reg_file))
         steam_config = subkey_lookup(
             reg_data, r'Registry\HKCU\Software\Valve\Steam')
         return steam_config.get('AutoLoginUser', '')
 
     @trace.method
     def set_last_user(self, username):
-        reg_file = os.path.expanduser('~/.steam/registry.vdf')
-        reg_data = vdf.loads(read_file(reg_file))
+        reg_data = vdf.loads(read_file(self.reg_file))
         steam_config = subkey_lookup(
             reg_data, r'Registry\HKCU\Software\Valve\Steam')
         steam_config['AutoLoginUser'] = username
         steam_config['RememberPassword'] = '1'
         reg_data = vdf.dumps(reg_data, pretty=True)
-        with open(reg_file, 'wt') as f:
+        with open(self.reg_file, 'wt') as f:
             f.write(reg_data)
-
-    PID_FILE = '~/.steam/steam.pid'
-    PIPE_FILE = '~/.steam/steam.pipe'
 
     def _is_steam_pid_valid(self):
         """Check if the steam.pid file designates a running process."""
         return is_process_running(self._read_steam_pid())
 
     def _read_steam_pid(self):
-        pidfile = os.path.expanduser(self.PID_FILE)
+        pidfile = os.path.expanduser(self.pid_file)
         pidtext = read_file(pidfile)
         if not pidtext:
             return False
@@ -72,13 +159,13 @@ class SteamLinux:
 
     @trace.method
     def _set_steam_pid(self):
-        pidfile = os.path.expanduser(self.PID_FILE)
+        pidfile = os.path.expanduser(self.pid_file)
         pidtext = str(os.getpid())
         write_file(pidfile, pidtext)
 
     @trace.method
     def _unset_steam_pid(self):
-        pidfile = os.path.expanduser(self.PID_FILE)
+        pidfile = os.path.expanduser(self.pid_file)
         write_file(pidfile, '')
 
     _lock_fd = -1
@@ -87,13 +174,13 @@ class SteamLinux:
 
     @trace.method
     def _connect(self):
-        self._pipe_fd = self._open_pipe_for_writing(self.PIPE_FILE)
+        self._pipe_fd = self._open_pipe_for_writing(self.pipe_file)
         return self._pipe_fd != -1
 
     @trace.method
     def _listen(self):
         self._has_steam_lock = True
-        self._pipe_fd = self._open_pipe_for_reading(self.PIPE_FILE)
+        self._pipe_fd = self._open_pipe_for_reading(self.pipe_file)
         self._thread = FileReaderThread(self._pipe_fd)
         self._thread.line_received.connect(self.command_received.emit)
         self._thread.start()
@@ -121,7 +208,7 @@ class SteamLinux:
         the first instance, false if another acolyte instance is running."""
         if self._lock_fd != -1:
             return True
-        pid_file = os.path.join(self.root, 'acolyte', 'acolyte.lock')
+        pid_file = os.path.join(self.acolyte_data, 'acolyte.lock')
         os.makedirs(os.path.dirname(pid_file), exist_ok=True)
         self._lock_fd = os.open(pid_file, os.O_WRONLY | os.O_CREAT, 0o644)
         try:
