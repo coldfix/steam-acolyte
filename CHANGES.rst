@@ -1,6 +1,14 @@
 CHANGES
 -------
 
+0.8.0
+~~~~~
+Date: 09.10.2022
+
+- add command line option ``--prefix`` to better support flatpack steam
+- try to autodetect whether to use the default, native, or the flatpack
+  version of steam (unreliable)
+
 
 0.7.9
 ~~~~~
