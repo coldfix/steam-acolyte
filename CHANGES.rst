@@ -1,6 +1,15 @@
 CHANGES
 -------
 
+0.8.1
+~~~~~
+Date: 09.10.2022
+
+- new build to trigger PyPI/AUR deployment…
+  It turns out, using ``schedule:`` in a GitHub Actions seems to prevent
+  it from being run on push (or at least that seems to be the case after
+  it has been disabled due to inactivity…)
+
 0.8.0
 ~~~~~
 Date: 09.10.2022
