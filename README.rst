@@ -64,22 +64,14 @@ Optionally, modify your steam launchers to execute ``steam-acolyte``.
 How it works
 ------------
 
-*acolyte* works dead-simple by saving the login token for the last active
-steam account upon program start. When the user clicks on a particular account
-it simply restores the corresponding token and then starts steam. *acolyte*
-only stores login tokes, but never any passwords! This has the following
-implications:
+*acolyte* does not inspect or store any password or login tokens at all. It
+only tells steam which user to login when starting. Steam uses its own
+mechanism to store login information. This has the following consequences:
 
 - the login token can be used to login without having to re-enter 2FA
-  (whereas for password-based logins you would need to redo 2FA)
-- the login token can only be used for a single login
-- after a successful login, steam will create a fresh token which acolyte can
-  save for the next cycle when steam exits or when acolyte is started the next
-  time
-- it is no problem to start and exit steam several times without acolyte
-  running (as long as you always sign on with the same account), because
-  acolyte will always pick up the most recent login token when it starts
-- the token expires if unused for a several weeks
+  (whereas for password-based login manager you would need to redo 2FA)
+- you can mix using steam with or without acolyte
+- active logins expire if unused for a several weeks
 - selecting "Change Account" from the steam menu or "Log Out User" in Big
   Picture mode UI invalidates the login and you will have to reenter your
   password for the logged out user
