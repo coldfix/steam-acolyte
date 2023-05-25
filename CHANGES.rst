@@ -1,6 +1,16 @@
 CHANGES
 -------
 
+0.9.0
+~~~~~
+Date: 25.05.2023
+
+- no longer modify/replace config.vdf (see #28)
+- remove obsolete "logout" button
+- the files in ``steam/acolyte/*/config.vdf`` that were created by
+  previous versions of the program no longer have any purposes
+
+
 0.8.1
 ~~~~~
 Date: 09.10.2022
