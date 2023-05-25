@@ -81,7 +81,6 @@ class LoginDialog(QDialog):
             return
         self.stopAction.setEnabled(False)
         self.wait_task = None
-        self.steam.store_login_cookie()
         self.update_userlist()
         if self._login:
             self.run_steam(self._login)
@@ -306,21 +305,11 @@ class UserWidget(ButtonWidget):
         top_label.setFont(top_font)
         labels.addWidget(top_label)
         labels.addWidget(bot_label)
-        self.logout_action = QAction()
-        self.logout_action.triggered.connect(self.logout_clicked)
-        self.logout_action.setIcon(self.theme.logout_icon)
-        self.logout_action.setToolTip("Delete saved login")
-        self.logout_action.setWhatsThis(
-            "Logout user by deleting the saved login token.\n"
-            "The user will stay visible on this list.")
         self.delete_action = QAction()
         self.delete_action.triggered.connect(self.delete_clicked)
         self.delete_action.setIcon(theme.delete_icon)
         self.delete_action.setToolTip("Delete user from list")
-        self.delete_action.setWhatsThis(
-            "Logout and remove user from this list.")
-        self.logout_button = QToolButton()
-        self.logout_button.setDefaultAction(self.logout_action)
+        self.delete_action.setWhatsThis("Remove user from this list.")
         self.delete_button = QToolButton()
         self.delete_button.setDefaultAction(self.delete_action)
         layout.setSpacing(0)
@@ -329,7 +318,6 @@ class UserWidget(ButtonWidget):
         layout.addLayout(labels)
         layout.addStretch()
         layout.addSpacing(10)
-        layout.addWidget(self.logout_button)
         layout.addWidget(self.delete_button)
         self.setLayout(layout)
         self.clicked.connect(self.login_clicked)
@@ -338,10 +326,6 @@ class UserWidget(ButtonWidget):
     def login_clicked(self):
         self.window().login(self.user.account_name)
 
-    def logout_clicked(self):
-        self.steam.remove_login_cookie(self.user.account_name)
-        self.update_ui()
-
     def delete_clicked(self):
         self.steam.remove_user(self.user.account_name)
         self.hide()
@@ -349,5 +333,4 @@ class UserWidget(ButtonWidget):
 
     def update_ui(self):
         username = self.user.account_name
-        self.logout_button.setVisible(self.steam.has_cookie(username))
         self.delete_button.setVisible(bool(username))

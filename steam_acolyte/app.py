@@ -89,16 +89,13 @@ def main(args=None):
             if not locked:
                 print("Waiting for steam to exit.")
                 steam.wait_for_lock()
-            if opts['store']:
-                steam.store_login_cookie()
-            elif opts['switch']:
+            if opts['switch']:
                 steam.switch_user(opts['<USER>'])
             elif opts['start']:
                 steam.switch_user(opts['<USER>'])
                 steam.unlock()
                 steam.run().waitForFinished(-1)
                 steam.lock()
-                steam.store_login_cookie()
         else:
             from steam_acolyte.window import LoginDialog
             from steam_acolyte.theme import load_theme
@@ -107,7 +104,6 @@ def main(args=None):
             window.show_trayicon()
             try:
                 if locked:
-                    steam.store_login_cookie()
                     window.show()
                 else:
                     print("Waiting for steam to exit.")

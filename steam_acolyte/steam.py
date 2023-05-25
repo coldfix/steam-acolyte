@@ -194,23 +194,9 @@ class Steam(SteamImpl, SteamBase, QObject):
         ]
 
     @trace.method
-    def store_login_cookie(self):
-        """Save the login token from the last active steam account."""
-        # No longer needed. Steam now handles this without us having to paste
-        # values into config.vdf.
-
-    @trace.method
-    def remove_login_cookie(self, username):
-        """Delete saved login token."""
-        userpath = os.path.join(self.acolyte_data, username, 'config.vdf')
-        if os.path.isfile(userpath):
-            os.remove(userpath)
-
-    @trace.method
     def remove_user(self, username):
         """Delete login token and remove account from the list of saved
         accounts."""
-        self.remove_login_cookie(username)
         loginusers = self.read_config('loginusers.vdf')
         loginusers['users'] = {
             uid: info
@@ -224,11 +210,6 @@ class Steam(SteamImpl, SteamBase, QObject):
             config, r'InstallConfigStore\Software\Valve\Steam\Accounts')
         accounts.pop(username, None)
         self.write_config('config.vdf', config)
-
-    def has_cookie(self, username):
-        """Check if there is a saved login cookie."""
-        userpath = os.path.join(self.acolyte_data, username, 'config.vdf')
-        return bool(username) and os.path.isfile(userpath)
 
     @trace.method
     def switch_user(self, username):
