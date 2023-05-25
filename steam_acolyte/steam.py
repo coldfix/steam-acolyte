@@ -7,7 +7,6 @@ import os
 import sys
 import shlex
 from time import sleep
-from shutil import copyfile
 from abc import abstractmethod
 
 if sys.platform == 'win32':
@@ -197,18 +196,8 @@ class Steam(SteamImpl, SteamBase, QObject):
     @trace.method
     def store_login_cookie(self):
         """Save the login token from the last active steam account."""
-        username = self.get_last_user()
-        userpath = os.path.join(self.acolyte_data, username, 'config.vdf')
-        configpath = os.path.join(self.steam_config, 'config.vdf')
-        config = self.read_config('config.vdf')
-        accounts = subkey_lookup(
-            config, r'InstallConfigStore\Software\Valve\Steam\Accounts')
-        if accounts.get(username):
-            os.makedirs(os.path.dirname(userpath), exist_ok=True)
-            copyfile(configpath, userpath)
-        else:
-            print("Not replacing login data for logged out user: {!r}"
-                  .format(username))
+        # No longer needed. Steam now handles this without us having to paste
+        # values into config.vdf.
 
     @trace.method
     def remove_login_cookie(self, username):
@@ -246,15 +235,6 @@ class Steam(SteamImpl, SteamBase, QObject):
         """Switch login config to given user. Do not use this while steam is
         running."""
         self.set_last_user(username)
-        if not username:
-            return True
-        userpath = os.path.join(self.acolyte_data, username, 'config.vdf')
-        configpath = os.path.join(self.steam_config, 'config.vdf')
-        if not os.path.isfile(userpath):
-            print("No stored config found for {!r}".format(username),
-                  file=sys.stderr)
-            return False
-        copyfile(userpath, configpath)
         return True
 
     @trace.method
@@ -279,15 +259,15 @@ class Steam(SteamImpl, SteamBase, QObject):
                 self._send([self.exe, '-shutdown'])
 
     @trace.method
-    def read_config(self, filename='config.vdf'):
-        """Read steam config.vdf file."""
+    def read_config(self, filename):
+        """Read a steam .vdf config file."""
         conf = os.path.join(self.steam_config, filename)
         text = read_file(conf)
         return vdf.loads(text) if text else {}
 
     @trace.method
     def write_config(self, filename, data):
-        """Write steam config.vdf file."""
+        """Write a steam .vdf config file."""
         conf = os.path.join(self.steam_config, filename)
         text = vdf.dumps(data, pretty=True)
         write_file(conf, text)
