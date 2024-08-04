@@ -78,7 +78,7 @@ jobs:
         run: twine upload dist/*.whl dist/*.tar.gz
 
       - name: Publish AUR package
-        uses: KSXGitHub/github-actions-deploy-aur@50ce1d52e6d8cc06c1be5d58fabf2666c270f9f2
+        uses: KSXGitHub/github-actions-deploy-aur@e07018655eeea52e5bf4bc4be386e2f503ad290b
         with:
           pkgname: steam-acolyte
           pkgbuild: dist/PKGBUILD
