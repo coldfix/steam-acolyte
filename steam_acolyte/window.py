@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
     QDialog, QLabel, QToolButton, QAbstractButton,
     QAction, QHBoxLayout, QVBoxLayout, QSizePolicy,
     QStyle, QStyleOption, QStylePainter, QWidget,
-    QSystemTrayIcon, QMenu, QApplication)
+    QSystemTrayIcon, QMenu, QApplication, QScrollArea)
 
 
 try:                        # PyQt >= 5.11
@@ -32,10 +32,19 @@ class LoginDialog(QDialog):
         self._exit = False
         self._login = None
         self.user_widgets = []
+        self.userlist = UserListWidget()
+        self.userlist.setLayout(QVBoxLayout())
+        scroll = QScrollArea(self)
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(self.userlist)
         self.setLayout(QVBoxLayout())
+        self.layout().addWidget(scroll)
+        self.layout().setContentsMargins(0, 0, 0, 0)
+
         self.setWindowTitle("Steam Acolyte")
         self.setWindowIcon(theme.window_icon)
         self.setStyleSheet(theme.window_style)
+
         steam.command_received.connect(lambda *_: self.activateWindow())
         self.update_userlist()
 
@@ -46,19 +55,19 @@ class LoginDialog(QDialog):
                        (u.persona_name.lower(), u.account_name.lower()))
         users.append(SteamUser('', '', '', ''))
         for user in users:
-            self.layout().addWidget(UserWidget(self, user))
+            self.userlist.layout().addWidget(UserWidget(self, user))
 
     def clear_layout(self):
         """Remove all users from the user list widget."""
         # The safest way I found to clear a QLayout is to reparent it to a
         # temporary widget. This also recursively reparents, hides and later
         # destroys any child widgets.
-        layout = self.layout()
+        layout = self.userlist.layout()
         if layout is not None:
             dump = QWidget()
             dump.setLayout(layout)
             dump.deleteLater()
-        self.setLayout(QVBoxLayout())
+        self.userlist.setLayout(QVBoxLayout())
 
     @trace.method
     def wait_for_lock(self):
@@ -269,6 +278,10 @@ def make_user_action(window, user):
     action.setIcon(QIcon(
         theme.user_icon if user.account_name else theme.plus_icon))
     return action
+
+
+class UserListWidget(QWidget):
+    pass
 
 
 class UserWidget(ButtonWidget):

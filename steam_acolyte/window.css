@@ -7,6 +7,14 @@ LoginDialog {
     );
 }
 
+QScrollArea {
+    background: transparent;
+}
+
+UserListWidget {
+    background: transparent;
+}
+
 UserWidget {
     background: qlineargradient(
         x1: 0, y1: 0,
