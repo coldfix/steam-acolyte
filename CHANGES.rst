@@ -1,6 +1,13 @@
 CHANGES
 -------
 
+0.10.0
+~~~~~~
+Date: 04.08.2024
+
+- make window scrollable and resizeable
+
+
 0.9.0
 ~~~~~
 Date: 25.05.2023
